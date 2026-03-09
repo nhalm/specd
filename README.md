@@ -1,6 +1,27 @@
 # spec-dd
 
-Spec-driven development framework for AI agents. Humans write specs, agents implement them.
+A framework for building software with AI agents using spec-driven development. You write specifications that define **what** to build and **why**. AI agents autonomously implement the code, audit it against the specs, and surface issues for your review.
+
+Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Requires Node.js for installation.
+
+## What This Is
+
+Most AI coding workflows are conversational — you prompt, the agent codes, you course-correct in real time. That works for small tasks but breaks down on larger projects where requirements are complex and context gets lost between sessions.
+
+spec-dd replaces that with a document-driven workflow:
+
+1. **You write specs** — markdown documents that define behavior, contracts, and interfaces for each component
+2. **Agents implement autonomously** — a loop picks work items one at a time, implements them, commits, and moves on
+3. **Agents audit their own work** — a separate audit phase compares code against specs and surfaces findings
+4. **You make the judgment calls** — ambiguous findings land in a review file for your decision before becoming work items
+
+The specs are the source of truth. If code contradicts a spec, the code is wrong. Agents never change specs — only humans do.
+
+## Prerequisites
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed and authenticated
+- Node.js (for `npx` installation)
+- [repomirror](https://www.npmjs.com/package/repomirror) (optional, for loop visualization)
 
 ## Install
 
@@ -9,54 +30,115 @@ cd your-project
 npx spec-dd init
 ```
 
-This prompts for your project name, copies the framework files, and fills in placeholders.
+Prompts for your project name and description, then scaffolds the full framework into your repo. Works with new or existing projects.
 
-## Update
+After init, customize these files for your stack:
+
+- **`AGENTS.md`** — Add your build commands, test runner, language conventions
+- **`.claude/commands/implement.md`** — Add your project's validation steps (test suite, linter, type checker)
+
+## What Gets Installed
+
+The framework installs these files into your project:
+
+### Specs (you write these)
+
+| File | Purpose |
+|------|---------|
+| `specs/README.md` | Index of all specs with status (Draft / Ready / Implemented) |
+| `specs/*.md` | Individual spec files — one per component or feature |
+| `specs/example-spec.md` | Annotated example showing the spec format |
+
+Specs go through a lifecycle: **Draft** (being written) → **Ready** (complete, agents can implement) → **Implemented** (code matches spec). You control Draft → Ready. The audit system manages Ready ↔ Implemented.
+
+### Work tracking (agents manage these)
+
+| File | Purpose |
+|------|---------|
+| `working_tracks.md` | Execution queue — every remaining work item in one place |
+| `tracks.md` | Done log — completed work items, organized by spec and version |
+| `review.md` | Ambiguous audit findings that need your judgment before becoming work items |
+
+`working_tracks.md` is the single source of truth for what needs doing. Items are small, one-iteration units of work. Blocked items are annotated with `(blocked: reason)` and skipped until unblocked.
+
+### The autonomous loop
+
+| File | Purpose |
+|------|---------|
+| `loop.sh` | Orchestrates the three-phase cycle |
+| `.claude/commands/implement.md` | Agent prompt: pick one item, implement, validate, commit |
+| `.claude/commands/audit.md` | Agent prompt: audit Ready specs against code |
+| `.claude/commands/full-audit.md` | Agent prompt: audit Ready + Implemented specs |
+| `.claude/commands/review-intake.md` | Agent prompt: process review.md into working_tracks.md |
+
+### Configuration
+
+| File | Purpose |
+|------|---------|
+| `CLAUDE.md` | Entry point for Claude Code — points to AGENTS.md |
+| `AGENTS.md` | Agent behavior guidelines: spec authority, loop system, conventions |
+| `GUIDE.md` | Human-readable getting-started walkthrough |
+| `planning_prompt.md` | Prompt for collaborative spec-writing sessions (no code) |
+
+## How the Loop Works
+
+```bash
+./loop.sh                # Standard: implement + audit Ready specs
+./loop.sh --skip-audit   # Implement only, no audit phase
+./loop.sh --full-audit   # Audit both Ready and Implemented specs
+```
+
+Each cycle has three phases:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Phase 1: Review Intake (Haiku)                          │
+│ Process review.md → working_tracks.md                   │
+├─────────────────────────────────────────────────────────┤
+│ Phase 2: Implementation (Sonnet)                        │
+│ Pick item → implement → validate → commit → repeat      │
+│ Until working_tracks.md is empty or all items blocked   │
+├─────────────────────────────────────────────────────────┤
+│ Phase 3: Audit (Opus)                                   │
+│ Compare specs to code → write findings                  │
+│ Clean? → exit. New findings? → next cycle.              │
+└─────────────────────────────────────────────────────────┘
+```
+
+The loop runs up to 5 cycles. It exits early if the audit finds nothing new (all specs match their code) or if a fatal error occurs (rate limit, API error, token limit).
+
+Each phase uses a different model — fast/cheap for review intake, balanced for implementation, strongest for audit. Models are configurable at the top of `loop.sh`.
+
+## Two Modes of Working
+
+**Planning mode** — You and Claude work together on specs. No code gets written. Use `planning_prompt.md` to start a session. Good for designing new features, auditing existing specs against code, and breaking work into items.
+
+**Loop mode** — Agents work autonomously. You review commits after the fact. Use `loop.sh`. Good for grinding through implementation once specs are solid.
+
+## Updating the Framework
 
 ```bash
 npx spec-dd update
 ```
 
-Overwrites framework-owned files (loop.sh, command prompts) without touching your customized files (AGENTS.md, specs, tracks).
-
-## Check
+Overwrites framework-owned files (loop.sh, command prompts) without touching files you've customized (AGENTS.md, specs, tracks). If a framework version removes a file, update cleans it up automatically.
 
 ```bash
 npx spec-dd doctor
 ```
 
-Validates all expected files are present and dependencies are available.
+Validates your installation: checks all expected files exist, loop.sh is executable, and required tools are available.
 
-## How It Works
+## Writing Good Specs
 
-```
-You write specs ──→ Agents implement ──→ Audit verifies ──→ You review
-      ↑                                                          │
-      └──────────── adjust specs if needed ──────────────────────┘
-```
+A spec defines **what** a component does and **why**, not **how** to implement it. Include:
 
-The autonomous loop runs three phases per cycle:
+- **Overview** — What and why in 1-2 sentences
+- **Scope** — What it handles and what it explicitly doesn't
+- **Dependencies** — Other specs this builds on
+- **Specification** — Behavior, contracts, interfaces — detailed enough that an agent can implement without asking questions
+- **Changelog** — Version history so agents can catch up on changes
 
-1. **Review intake** — Processes human decisions from `review.md` into the work queue
-2. **Implementation** — Picks one item from `working_tracks.md`, implements it, moves it to `tracks.md`
-3. **Audit** — Verifies specs against code, surfaces findings for the next cycle
+Don't include implementation details (file names, function signatures, variable names). The agent has autonomy on the how.
 
-```bash
-./loop.sh                # Standard loop (audit Ready specs only)
-./loop.sh --skip-audit   # Implement only, no audit
-./loop.sh --full-audit   # Audit both Ready and Implemented specs
-```
-
-## Key Files
-
-| File | Purpose |
-|------|---------|
-| `AGENTS.md` | Agent guidelines — spec authority, conventions |
-| `specs/README.md` | Spec index with status and phase tables |
-| `working_tracks.md` | Work queue — remaining items |
-| `tracks.md` | Done log — completed items |
-| `review.md` | Ambiguous findings awaiting human judgment |
-| `loop.sh` | Three-phase autonomous loop |
-| `.claude/commands/` | Agent prompts for each loop phase |
-
-See [GUIDE.md](templates/GUIDE.md) for the full getting-started walkthrough.
+See `specs/example-spec.md` for the full annotated format.
