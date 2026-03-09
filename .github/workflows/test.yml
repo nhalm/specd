@@ -1,12 +1,19 @@
-name: Tests
+name: CI
 
 on:
   push:
   pull_request:
 
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: ./test.sh
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+      - run: make lint
+      - run: make fmt
+      - run: make test
