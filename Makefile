@@ -1,7 +1,8 @@
 .PHONY: install hooks check lint fmt test fix
 
-install: ## Install dependencies
+install: ## Install dependencies and link CLI
 	npm install
+	npm link
 
 hooks: ## Install lefthook git hooks
 	npx lefthook install

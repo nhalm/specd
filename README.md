@@ -28,8 +28,8 @@ Clone this repo, install dependencies, then run the CLI targeting your project:
 
 ```bash
 git clone git@github.com:nhalm/spec-dd-framework.git
-cd spec-dd-framework && npm install
-node src/cli.js init /path/to/your-project
+cd spec-dd-framework && make install
+spec-dd init /path/to/your-project
 ```
 
 Prompts for your project name and description, then scaffolds the full framework into your repo. Works with new or existing projects.
@@ -169,8 +169,8 @@ Each phase uses a different model — fast/cheap for review intake, balanced for
 Pull the latest version of this repo and run update against your project:
 
 ```bash
-cd spec-dd-framework && git pull && npm install
-node src/cli.js update /path/to/your-project
+cd spec-dd-framework && git pull && make install
+spec-dd update /path/to/your-project
 ```
 
 Overwrites framework-owned files (loop.sh, command prompts) without touching files you've customized (AGENTS.md, specs, tracks). If a framework version removes a file, update cleans it up automatically.
@@ -178,7 +178,7 @@ Overwrites framework-owned files (loop.sh, command prompts) without touching fil
 To check your installation:
 
 ```bash
-node src/cli.js doctor /path/to/your-project
+spec-dd doctor /path/to/your-project
 ```
 
 ## Writing Good Specs
