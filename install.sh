@@ -8,12 +8,12 @@ VERSION="0.1.0"
 # Files that get overwritten on update
 FRAMEWORK_OWNED=(
   "loop.sh"
-  ".claude/commands/spec-dd.implement.md"
-  ".claude/commands/spec-dd.audit.md"
-  ".claude/commands/spec-dd.full-audit.md"
-  ".claude/commands/spec-dd.review-intake.md"
-  ".claude/commands/spec-dd.setup.md"
-  ".claude/commands/spec-dd.plan.md"
+  ".claude/commands/spec-dd/implement.md"
+  ".claude/commands/spec-dd/audit.md"
+  ".claude/commands/spec-dd/full-audit.md"
+  ".claude/commands/spec-dd/review-intake.md"
+  ".claude/commands/spec-dd/setup.md"
+  ".claude/commands/spec-dd/plan.md"
 )
 
 # Files installed once, never overwritten
@@ -41,6 +41,12 @@ REMOVED=(
   ".claude/commands/review-intake.md"
   ".claude/commands/setup.md"
   "planning_prompt.md"
+  ".claude/commands/spec-dd.implement.md"
+  ".claude/commands/spec-dd.audit.md"
+  ".claude/commands/spec-dd.full-audit.md"
+  ".claude/commands/spec-dd.review-intake.md"
+  ".claude/commands/spec-dd.setup.md"
+  ".claude/commands/spec-dd.plan.md"
 )
 
 # Map template source path to destination path

@@ -28,9 +28,9 @@ Based on the codebase, propose language-specific conventions:
 
 Ask the human to confirm or adjust, then update the section.
 
-## Step 3: .claude/commands/spec-dd.implement.md — Validation
+## Step 3: .claude/commands/spec-dd/implement.md — Validation
 
-Read `.claude/commands/spec-dd.implement.md`. The validation section has a placeholder comment.
+Read `.claude/commands/spec-dd/implement.md`. The validation section has a placeholder comment.
 
 Propose concrete validation steps that match this project's tooling:
 - Test command(s) to run

@@ -40,13 +40,13 @@ After installing, open Claude Code in your project and run the setup command:
 ```bash
 cd your-project
 claude
-> /spec-dd.setup
+> /spec-dd:setup
 ```
 
 This analyzes your codebase and walks you through customizing:
 
 - **`AGENTS.md`** — Build commands, test runner, language conventions
-- **`.claude/commands/spec-dd.implement.md`** — Validation steps (test suite, linter, type checker)
+- **`.claude/commands/spec-dd/implement.md`** — Validation steps (test suite, linter, type checker)
 - **First spec** — Helps you write your first spec based on what you want to build
 
 ## Usage
@@ -56,13 +56,13 @@ This analyzes your codebase and walks you through customizing:
 Start a planning session to work on specs collaboratively with Claude. No code gets written — only markdown.
 
 ```bash
-cat .claude/commands/spec-dd.plan.md | claude
+cat .claude/commands/spec-dd/plan.md | claude
 ```
 
 Or from inside Claude Code:
 
 ```
-/spec-dd.plan
+/spec-dd:plan
 ```
 
 Use this to design new features, audit existing specs against code, and break work into items in `working_tracks.md`.
@@ -85,12 +85,12 @@ You can also run individual phases from inside Claude Code:
 
 | Command | Purpose |
 |---------|---------|
-| `/spec-dd.setup` | Interactive project setup after install |
-| `/spec-dd.plan` | Collaborative spec writing and analysis |
-| `/spec-dd.implement` | Implement one work item from working_tracks.md |
-| `/spec-dd.audit` | Audit Ready specs against code |
-| `/spec-dd.full-audit` | Audit Ready + Implemented specs |
-| `/spec-dd.review-intake` | Process review.md items into working_tracks.md |
+| `/spec-dd:setup` | Interactive project setup after install |
+| `/spec-dd:plan` | Collaborative spec writing and analysis |
+| `/spec-dd:implement` | Implement one work item from working_tracks.md |
+| `/spec-dd:audit` | Audit Ready specs against code |
+| `/spec-dd:full-audit` | Audit Ready + Implemented specs |
+| `/spec-dd:review-intake` | Process review.md items into working_tracks.md |
 
 ## What Gets Installed
 

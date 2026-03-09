@@ -8,7 +8,8 @@
       "Read(//private/tmp/**)",
       "Bash(rm -rf spec-dd-test)",
       "Bash(mkdir spec-dd-test)",
-      "Bash(/Users/nhalm/work/spec-dd-framework/install.sh init /tmp/spec-dd-test)"
+      "Bash(/Users/nhalm/work/spec-dd-framework/install.sh init /tmp/spec-dd-test)",
+      "Bash(mkdir:*)"
     ]
   }
 }
