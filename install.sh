@@ -21,9 +21,14 @@ SCAFFOLD=(
   "specs/README.md"
   "specs/example-spec.md"
   "tracks.md"
-  "working_tracks.md"
   "review.md"
   "planning_prompt.md"
+)
+
+# Files where the header (everything up to and including first ---) is
+# framework-owned and updated, but content below --- is preserved
+HEADER_UPDATABLE=(
+  "working_tracks.md"
 )
 
 # Files removed in this version (cleanup from prior installs)
@@ -73,8 +78,8 @@ do_init() {
   local copied=0
   local skipped=0
 
-  # Install all files (framework + scaffold)
-  all_files=("${FRAMEWORK_OWNED[@]}" "${SCAFFOLD[@]}")
+  # Install all files (framework + scaffold + header-updatable)
+  all_files=("${FRAMEWORK_OWNED[@]}" "${SCAFFOLD[@]}" "${HEADER_UPDATABLE[@]}")
   for dest in "${all_files[@]}"; do
     local src
     src="$(src_for "$dest")"
@@ -158,6 +163,36 @@ do_update() {
     skipped=$((skipped + 1))
   done
 
+  # Update headers on header-updatable files (preserve content below ---)
+  for dest in "${HEADER_UPDATABLE[@]}"; do
+    local src
+    src="$(src_for "$dest")"
+    local src_path="${TEMPLATES_DIR}/${src}"
+    local dest_path="${target}/${dest}"
+
+    if [ ! -f "$dest_path" ]; then
+      # File doesn't exist yet — install it fresh
+      mkdir -p "$(dirname "$dest_path")"
+      cp "$src_path" "$dest_path"
+      echo "  CREATE  ${dest}"
+      updated=$((updated + 1))
+      continue
+    fi
+
+    # Extract new header (everything up to and including first ---)
+    local new_header
+    new_header="$(sed '/^---$/q' "$src_path")"
+
+    # Extract existing content (everything after first ---)
+    local existing_content
+    existing_content="$(sed '1,/^---$/d' "$dest_path")"
+
+    # Combine
+    printf '%s\n%s' "$new_header" "$existing_content" > "$dest_path"
+    echo "  UPDATE  ${dest} (header only)"
+    updated=$((updated + 1))
+  done
+
   # Remove obsolete files
   for dest in "${REMOVED[@]}"; do
     local dest_path="${target}/${dest}"
@@ -202,7 +237,7 @@ do_doctor() {
   echo "Checking files..."
   echo ""
 
-  all_files=("${FRAMEWORK_OWNED[@]}" "${SCAFFOLD[@]}")
+  all_files=("${FRAMEWORK_OWNED[@]}" "${SCAFFOLD[@]}" "${HEADER_UPDATABLE[@]}")
   for dest in "${all_files[@]}"; do
     if [ -f "${target}/${dest}" ]; then
       check "$dest" "true"
