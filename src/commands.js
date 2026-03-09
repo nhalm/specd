@@ -8,6 +8,7 @@ import {
   statSync,
 } from "node:fs";
 import { join, dirname } from "node:path";
+import { createHash } from "node:crypto";
 import {
   VERSION,
   FRAMEWORK_OWNED,
@@ -17,6 +18,26 @@ import {
   ALL_FILES,
   srcFor,
 } from "./config.js";
+
+function computeChecksum(filePath) {
+  const content = readFileSync(filePath, "utf-8");
+  return createHash("sha256").update(content).digest("hex");
+}
+
+function loadChecksums(targetDir) {
+  const checksumFile = join(targetDir, ".spec-dd-checksums.json");
+  if (existsSync(checksumFile)) {
+    return JSON.parse(readFileSync(checksumFile, "utf-8"));
+  }
+  return {};
+}
+
+function saveChecksums(targetDir, checksums) {
+  writeFileSync(
+    join(targetDir, ".spec-dd-checksums.json"),
+    JSON.stringify(checksums, null, 2) + "\n",
+  );
+}
 
 function readTemplate(templatesDir, dest) {
   const src = srcFor(dest);
@@ -58,17 +79,34 @@ export function init(targetDir, templatesDir, { projectName, description }) {
 
   writeFileSync(join(targetDir, ".spec-dd-version"), VERSION);
   messages.push("  CREATE  .spec-dd-version");
+
+  // Compute and save checksums for all created files
+  const checksums = {};
+  for (const dest of ALL_FILES) {
+    const destPath = join(targetDir, dest);
+    if (existsSync(destPath)) {
+      checksums[dest] = computeChecksum(destPath);
+    }
+  }
+  saveChecksums(targetDir, checksums);
+  messages.push("  CREATE  .spec-dd-checksums.json");
+
   messages.push("");
   messages.push(`Done. ${copied} files created, ${skipped} skipped.`);
 
   return { copied, skipped, messages };
 }
 
-export function update(targetDir, templatesDir) {
+export function update(targetDir, templatesDir, { dryRun = false } = {}) {
   let updated = 0;
   let skipped = 0;
   let deleted = 0;
   const messages = [];
+
+  const pfx = (label) => (dryRun ? `WOULD ${label}` : label);
+
+  const storedChecksums = loadChecksums(targetDir);
+  const newChecksums = { ...storedChecksums };
 
   const versionFile = join(targetDir, ".spec-dd-version");
   if (existsSync(versionFile)) {
@@ -89,9 +127,19 @@ export function update(targetDir, templatesDir) {
       continue;
     }
 
-    ensureDir(destPath);
-    writeFileSync(destPath, readFileSync(srcPath, "utf-8"));
-    messages.push(`  UPDATE  ${dest}`);
+    // Check for local modifications
+    if (existsSync(destPath) && storedChecksums[dest]) {
+      const currentChecksum = computeChecksum(destPath);
+      if (currentChecksum !== storedChecksums[dest]) {
+        messages.push(`  ${pfx("WARN")}  ${dest} (modified locally — overwriting)`);
+      }
+    }
+
+    if (!dryRun) {
+      ensureDir(destPath);
+      writeFileSync(destPath, readFileSync(srcPath, "utf-8"));
+    }
+    messages.push(`  ${pfx("UPDATE")}  ${dest}`);
     updated++;
   }
 
@@ -99,13 +147,15 @@ export function update(targetDir, templatesDir) {
   for (const dest of SCAFFOLD) {
     const destPath = join(targetDir, dest);
     if (existsSync(destPath)) {
-      messages.push(`  SKIP  ${dest} (scaffold — not overwritten)`);
+      messages.push(`  ${pfx("SKIP")}  ${dest} (scaffold — not overwritten)`);
       skipped++;
     } else {
       const srcPath = join(templatesDir, srcFor(dest));
-      ensureDir(destPath);
-      writeFileSync(destPath, readFileSync(srcPath, "utf-8"));
-      messages.push(`  CREATE  ${dest} (new in this version)`);
+      if (!dryRun) {
+        ensureDir(destPath);
+        writeFileSync(destPath, readFileSync(srcPath, "utf-8"));
+      }
+      messages.push(`  ${pfx("CREATE")}  ${dest} (new in this version)`);
       updated++;
     }
   }
@@ -116,9 +166,11 @@ export function update(targetDir, templatesDir) {
     const destPath = join(targetDir, dest);
 
     if (!existsSync(destPath)) {
-      ensureDir(destPath);
-      writeFileSync(destPath, readFileSync(srcPath, "utf-8"));
-      messages.push(`  CREATE  ${dest}`);
+      if (!dryRun) {
+        ensureDir(destPath);
+        writeFileSync(destPath, readFileSync(srcPath, "utf-8"));
+      }
+      messages.push(`  ${pfx("CREATE")}  ${dest}`);
       updated++;
       continue;
     }
@@ -129,7 +181,9 @@ export function update(targetDir, templatesDir) {
       const lines = existing.split("\n");
       const hasSeparator = lines.some((line) => line === "---");
       if (!hasSeparator) {
-        messages.push(`  SKIP  ${dest} (no --- separator found — cannot update header safely)`);
+        messages.push(
+          `  ${pfx("SKIP")}  ${dest} (no --- separator found — cannot update header safely)`,
+        );
         skipped++;
         continue;
       }
@@ -144,8 +198,10 @@ export function update(targetDir, templatesDir) {
     const existingSepIdx = existingLines.indexOf("---");
     const existingContent = existingLines.slice(existingSepIdx + 1).join("\n");
 
-    writeFileSync(destPath, newHeader + "\n" + existingContent);
-    messages.push(`  UPDATE  ${dest} (header only)`);
+    if (!dryRun) {
+      writeFileSync(destPath, newHeader + "\n" + existingContent);
+    }
+    messages.push(`  ${pfx("UPDATE")}  ${dest} (header only)`);
     updated++;
   }
 
@@ -153,21 +209,40 @@ export function update(targetDir, templatesDir) {
   for (const dest of REMOVED) {
     const destPath = join(targetDir, dest);
     if (existsSync(destPath)) {
-      unlinkSync(destPath);
-      messages.push(`  DELETE  ${dest}`);
+      if (!dryRun) {
+        unlinkSync(destPath);
+      }
+      messages.push(`  ${pfx("DELETE")}  ${dest}`);
       deleted++;
     }
   }
 
-  const loopPath = join(targetDir, "loop.sh");
-  if (existsSync(loopPath)) {
-    chmodSync(loopPath, 0o755);
+  if (!dryRun) {
+    const loopPath = join(targetDir, "loop.sh");
+    if (existsSync(loopPath)) {
+      chmodSync(loopPath, 0o755);
+    }
+
+    writeFileSync(versionFile, VERSION);
+
+    // Recompute and save checksums for all files
+    for (const dest of ALL_FILES) {
+      const destPath = join(targetDir, dest);
+      if (existsSync(destPath)) {
+        newChecksums[dest] = computeChecksum(destPath);
+      } else {
+        delete newChecksums[dest];
+      }
+    }
+    saveChecksums(targetDir, newChecksums);
   }
 
-  writeFileSync(versionFile, VERSION);
-
   messages.push("");
-  messages.push(`Done. ${updated} updated, ${skipped} skipped (scaffold), ${deleted} deleted.`);
+  if (dryRun) {
+    messages.push("Dry run complete. No files were modified.");
+  } else {
+    messages.push(`Done. ${updated} updated, ${skipped} skipped (scaffold), ${deleted} deleted.`);
+  }
 
   return { updated, skipped, deleted, messages };
 }
@@ -209,9 +284,15 @@ export function doctor(targetDir) {
 
   const versionFile = join(targetDir, ".spec-dd-version");
   if (existsSync(versionFile)) {
-    const ver = readFileSync(versionFile, "utf-8").trim();
-    messages.push(`  PASS  .spec-dd-version (${ver})`);
+    const projectVersion = readFileSync(versionFile, "utf-8").trim();
+    messages.push(`  PASS  .spec-dd-version (${projectVersion})`);
     pass++;
+    if (projectVersion !== VERSION) {
+      messages.push(
+        `  WARN  Version mismatch: project ${projectVersion}, framework ${VERSION} (run 'spec-dd update')`,
+      );
+      fail++;
+    }
   } else {
     messages.push("  FAIL  .spec-dd-version exists");
     fail++;

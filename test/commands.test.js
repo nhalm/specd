@@ -1,9 +1,18 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, readFileSync, writeFileSync, existsSync, statSync, rmSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  statSync,
+  rmSync,
+  chmodSync,
+} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { init, update, doctor } from "../src/commands.js";
+import { ALL_FILES } from "../src/config.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const TEMPLATES_DIR = join(__dirname, "..", "templates");
@@ -97,6 +106,23 @@ describe("init", () => {
     expect(result.copied).toBeGreaterThan(0);
     expect(result.skipped).toBe(0);
   });
+
+  it("reports exact file counts", () => {
+    const result = runInit(tmp);
+    expect(result.copied).toBe(ALL_FILES.length);
+    expect(result.skipped).toBe(0);
+  });
+
+  it("handles special characters in project name", () => {
+    init(tmp, TEMPLATES_DIR, {
+      projectName: "My Project (Beta)",
+      description: "A $pecial & <project>",
+    });
+    const agents = readFileSync(join(tmp, "AGENTS.md"), "utf-8");
+    expect(agents).toContain("My Project (Beta)");
+    const readme = readFileSync(join(tmp, "specs/README.md"), "utf-8");
+    expect(readme).toContain("A $pecial & <project>");
+  });
 });
 
 describe("update", () => {
@@ -178,6 +204,27 @@ describe("update", () => {
     update(tmp, TEMPLATES_DIR);
     expect(existsSync(join(tmp, "review.md"))).toBe(true);
   });
+
+  it("skips working_tracks.md with --- inside content but no separator line", () => {
+    writeFileSync(join(tmp, "working_tracks.md"), "some content with --- in the middle");
+    update(tmp, TEMPLATES_DIR);
+    expect(readFileSync(join(tmp, "working_tracks.md"), "utf-8")).toBe(
+      "some content with --- in the middle",
+    );
+  });
+
+  it("handles working_tracks.md ending with --- and no trailing newline", () => {
+    writeFileSync(join(tmp, "working_tracks.md"), "# Header\n\n---");
+    update(tmp, TEMPLATES_DIR);
+    const content = readFileSync(join(tmp, "working_tracks.md"), "utf-8");
+    expect(content).toContain("---");
+  });
+
+  it("returns correct counts for clean update", () => {
+    const result = update(tmp, TEMPLATES_DIR);
+    expect(result.updated).toBeGreaterThan(0);
+    expect(result.deleted).toBe(0);
+  });
 });
 
 describe("doctor", () => {
@@ -203,5 +250,42 @@ describe("doctor", () => {
     rmSync(join(tmp, "loop.sh"));
     const result = doctor(tmp);
     expect(result.fail).toBeGreaterThan(0);
+  });
+
+  it("detects non-executable loop.sh", () => {
+    runInit(tmp);
+    chmodSync(join(tmp, "loop.sh"), 0o644);
+    const result = doctor(tmp);
+    expect(result.fail).toBeGreaterThan(0);
+  });
+
+  it("detects missing .spec-dd-version", () => {
+    runInit(tmp);
+    rmSync(join(tmp, ".spec-dd-version"));
+    const result = doctor(tmp);
+    expect(result.fail).toBeGreaterThan(0);
+  });
+
+  it("reports correct pass/fail counts with one missing file", () => {
+    runInit(tmp);
+    rmSync(join(tmp, "CLAUDE.md"));
+    const result = doctor(tmp);
+    expect(result.fail).toBe(1);
+  });
+});
+
+describe("error handling", () => {
+  it("init throws when templates directory is missing", () => {
+    const tmp = makeTmp();
+    try {
+      expect(() =>
+        init(tmp, "/nonexistent/templates", {
+          projectName: "Test",
+          description: "Test",
+        }),
+      ).toThrow();
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });
