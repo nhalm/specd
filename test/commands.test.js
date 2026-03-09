@@ -1,0 +1,207 @@
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { mkdtempSync, readFileSync, writeFileSync, existsSync, statSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
+import { init, update, doctor } from "../src/commands.js";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const TEMPLATES_DIR = join(__dirname, "..", "templates");
+
+function makeTmp() {
+  return mkdtempSync(join(tmpdir(), "spec-dd-test-"));
+}
+
+function runInit(dir, name = "TestProject", desc = "A test project") {
+  return init(dir, TEMPLATES_DIR, { projectName: name, description: desc });
+}
+
+describe("init", () => {
+  let tmp;
+
+  beforeEach(() => {
+    tmp = makeTmp();
+  });
+
+  afterEach(() => {
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it("creates all expected files", () => {
+    runInit(tmp);
+
+    expect(existsSync(join(tmp, "CLAUDE.md"))).toBe(true);
+    expect(existsSync(join(tmp, "AGENTS.md"))).toBe(true);
+    expect(existsSync(join(tmp, "loop.sh"))).toBe(true);
+    expect(existsSync(join(tmp, "specs/README.md"))).toBe(true);
+    expect(existsSync(join(tmp, "specs/example-spec.md"))).toBe(true);
+    expect(existsSync(join(tmp, "tracks.md"))).toBe(true);
+    expect(existsSync(join(tmp, "review.md"))).toBe(true);
+    expect(existsSync(join(tmp, "working_tracks.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/spec-dd/implement.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/spec-dd/audit.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/spec-dd/full-audit.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/spec-dd/review-intake.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/spec-dd/setup.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/spec-dd/plan.md"))).toBe(true);
+  });
+
+  it("replaces {PROJECT_NAME} in AGENTS.md", () => {
+    runInit(tmp);
+    const content = readFileSync(join(tmp, "AGENTS.md"), "utf-8");
+    expect(content).toContain("TestProject");
+    expect(content).not.toContain("{PROJECT_NAME}");
+  });
+
+  it("replaces {PROJECT_NAME} in specs/README.md", () => {
+    runInit(tmp);
+    const content = readFileSync(join(tmp, "specs/README.md"), "utf-8");
+    expect(content).toContain("TestProject");
+    expect(content).not.toContain("{PROJECT_NAME}");
+  });
+
+  it("replaces {PROJECT_NAME} in tracks.md", () => {
+    runInit(tmp);
+    const content = readFileSync(join(tmp, "tracks.md"), "utf-8");
+    expect(content).toContain("TestProject");
+    expect(content).not.toContain("{PROJECT_NAME}");
+  });
+
+  it("replaces {One-line project description} in specs/README.md", () => {
+    runInit(tmp);
+    const content = readFileSync(join(tmp, "specs/README.md"), "utf-8");
+    expect(content).toContain("A test project");
+    expect(content).not.toContain("{One-line project description}");
+  });
+
+  it("creates .spec-dd-version with correct version", () => {
+    runInit(tmp);
+    const version = readFileSync(join(tmp, ".spec-dd-version"), "utf-8");
+    expect(version).toBe("0.1.0");
+  });
+
+  it("makes loop.sh executable", () => {
+    runInit(tmp);
+    const stats = statSync(join(tmp, "loop.sh"));
+    expect(stats.mode & 0o100).toBeTruthy();
+  });
+
+  it("skips files that already exist", () => {
+    writeFileSync(join(tmp, "CLAUDE.md"), "DO NOT OVERWRITE");
+    runInit(tmp);
+    expect(readFileSync(join(tmp, "CLAUDE.md"), "utf-8")).toBe("DO NOT OVERWRITE");
+  });
+
+  it("returns correct counts", () => {
+    const result = runInit(tmp);
+    expect(result.copied).toBeGreaterThan(0);
+    expect(result.skipped).toBe(0);
+  });
+});
+
+describe("update", () => {
+  let tmp;
+
+  beforeEach(() => {
+    tmp = makeTmp();
+    runInit(tmp);
+  });
+
+  afterEach(() => {
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it("overwrites framework-owned files", () => {
+    writeFileSync(join(tmp, "loop.sh"), "CORRUPTED");
+    update(tmp, TEMPLATES_DIR);
+    const content = readFileSync(join(tmp, "loop.sh"), "utf-8");
+    expect(content).not.toContain("CORRUPTED");
+  });
+
+  it("skips scaffold files", () => {
+    const agentsPath = join(tmp, "AGENTS.md");
+    const original = readFileSync(agentsPath, "utf-8");
+    writeFileSync(agentsPath, original + "\nCUSTOM CONTENT");
+    update(tmp, TEMPLATES_DIR);
+    expect(readFileSync(agentsPath, "utf-8")).toContain("CUSTOM CONTENT");
+  });
+
+  it("preserves content below --- in working_tracks.md", () => {
+    const wtPath = join(tmp, "working_tracks.md");
+    const original = readFileSync(wtPath, "utf-8");
+    writeFileSync(wtPath, original + "\n## My Custom Work Item\n- [ ] Do something\n");
+    update(tmp, TEMPLATES_DIR);
+    const updated = readFileSync(wtPath, "utf-8");
+    expect(updated).toContain("My Custom Work Item");
+    expect(updated).toContain("---");
+  });
+
+  it("skips working_tracks.md when no --- separator exists", () => {
+    writeFileSync(join(tmp, "working_tracks.md"), "No separator here");
+    update(tmp, TEMPLATES_DIR);
+    expect(readFileSync(join(tmp, "working_tracks.md"), "utf-8")).toBe("No separator here");
+  });
+
+  it("handles multiple --- separators correctly", () => {
+    writeFileSync(
+      join(tmp, "working_tracks.md"),
+      "# Working Tracks\n\n---\n\n## Section 1\n\n---\n\n## Section 2\n",
+    );
+    update(tmp, TEMPLATES_DIR);
+    const content = readFileSync(join(tmp, "working_tracks.md"), "utf-8");
+    expect(content).toContain("Section 1");
+    expect(content).toContain("Section 2");
+  });
+
+  it("deletes files in REMOVED list", () => {
+    writeFileSync(join(tmp, "GUIDE.md"), "old guide");
+    update(tmp, TEMPLATES_DIR);
+    expect(existsSync(join(tmp, "GUIDE.md"))).toBe(false);
+  });
+
+  it("creates .spec-dd-version", () => {
+    const versionPath = join(tmp, ".spec-dd-version");
+    rmSync(versionPath, { force: true });
+    update(tmp, TEMPLATES_DIR);
+    expect(existsSync(versionPath)).toBe(true);
+    expect(readFileSync(versionPath, "utf-8")).toBe("0.1.0");
+  });
+
+  it("creates working_tracks.md if it doesn't exist", () => {
+    rmSync(join(tmp, "working_tracks.md"), { force: true });
+    update(tmp, TEMPLATES_DIR);
+    expect(existsSync(join(tmp, "working_tracks.md"))).toBe(true);
+  });
+
+  it("creates missing scaffold files", () => {
+    rmSync(join(tmp, "review.md"), { force: true });
+    update(tmp, TEMPLATES_DIR);
+    expect(existsSync(join(tmp, "review.md"))).toBe(true);
+  });
+});
+
+describe("doctor", () => {
+  let tmp;
+
+  beforeEach(() => {
+    tmp = makeTmp();
+  });
+
+  afterEach(() => {
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it("reports all files present on clean init", () => {
+    runInit(tmp);
+    const result = doctor(tmp);
+    expect(result.fail).toBe(0);
+    expect(result.pass).toBeGreaterThan(0);
+  });
+
+  it("fails when a required file is missing", () => {
+    runInit(tmp);
+    rmSync(join(tmp, "loop.sh"));
+    const result = doctor(tmp);
+    expect(result.fail).toBeGreaterThan(0);
+  });
+});

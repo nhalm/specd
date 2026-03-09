@@ -19,16 +19,17 @@ The specs are the source of truth. If code contradicts a spec, the code is wrong
 
 ## Prerequisites
 
+- [Node.js](https://nodejs.org/) (v18+) with npm/npx
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed and authenticated
-- [repomirror](https://www.npmjs.com/package/repomirror) (optional, for loop visualization)
 
 ## Install
 
-Clone this repo, then run the install script targeting your project:
+Clone this repo, install dependencies, then run the CLI targeting your project:
 
 ```bash
 git clone git@github.com:nhalm/spec-dd-framework.git
-./spec-dd-framework/install.sh init /path/to/your-project
+cd spec-dd-framework && npm install
+node src/cli.js init /path/to/your-project
 ```
 
 Prompts for your project name and description, then scaffolds the full framework into your repo. Works with new or existing projects.
@@ -115,29 +116,29 @@ Processes `review.md` into actionable work items. Reads each ambiguous finding, 
 
 ### Specs (you write these)
 
-| File | Purpose |
-|------|---------|
-| `specs/README.md` | Index of all specs with status (Draft / Ready / Implemented) |
-| `specs/*.md` | Individual spec files — one per component or feature |
-| `specs/example-spec.md` | Annotated example showing the spec format |
+| File                    | Purpose                                                      |
+| ----------------------- | ------------------------------------------------------------ |
+| `specs/README.md`       | Index of all specs with status (Draft / Ready / Implemented) |
+| `specs/*.md`            | Individual spec files — one per component or feature         |
+| `specs/example-spec.md` | Annotated example showing the spec format                    |
 
 Specs go through a lifecycle: **Draft** (being written) → **Ready** (complete, agents can implement) → **Implemented** (code matches spec). You control Draft → Ready. The audit system manages Ready ↔ Implemented.
 
 ### Work tracking (agents manage these)
 
-| File | Purpose |
-|------|---------|
-| `working_tracks.md` | Execution queue — every remaining work item in one place |
-| `tracks.md` | Done log — completed work items, organized by spec and version |
-| `review.md` | Ambiguous audit findings that need your judgment before becoming work items |
+| File                | Purpose                                                                     |
+| ------------------- | --------------------------------------------------------------------------- |
+| `working_tracks.md` | Execution queue — every remaining work item in one place                    |
+| `tracks.md`         | Done log — completed work items, organized by spec and version              |
+| `review.md`         | Ambiguous audit findings that need your judgment before becoming work items |
 
 `working_tracks.md` is the single source of truth for what needs doing. Items are small, one-iteration units of work. Blocked items are annotated with `(blocked: reason)` and skipped until unblocked.
 
 ### Configuration
 
-| File | Purpose |
-|------|---------|
-| `CLAUDE.md` | Entry point for Claude Code — points to AGENTS.md |
+| File        | Purpose                                                             |
+| ----------- | ------------------------------------------------------------------- |
+| `CLAUDE.md` | Entry point for Claude Code — points to AGENTS.md                   |
 | `AGENTS.md` | Agent behavior guidelines: spec authority, loop system, conventions |
 
 ## How the Loop Works
@@ -168,8 +169,8 @@ Each phase uses a different model — fast/cheap for review intake, balanced for
 Pull the latest version of this repo and run update against your project:
 
 ```bash
-cd spec-dd-framework && git pull
-./install.sh update /path/to/your-project
+cd spec-dd-framework && git pull && npm install
+node src/cli.js update /path/to/your-project
 ```
 
 Overwrites framework-owned files (loop.sh, command prompts) without touching files you've customized (AGENTS.md, specs, tracks). If a framework version removes a file, update cleans it up automatically.
@@ -177,7 +178,7 @@ Overwrites framework-owned files (loop.sh, command prompts) without touching fil
 To check your installation:
 
 ```bash
-./spec-dd-framework/install.sh doctor /path/to/your-project
+node src/cli.js doctor /path/to/your-project
 ```
 
 ## Writing Good Specs

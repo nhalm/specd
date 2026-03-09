@@ -1,0 +1,56 @@
+export const VERSION = "0.1.0";
+
+/** Files that get overwritten on update */
+export const FRAMEWORK_OWNED = [
+  "loop.sh",
+  ".claude/commands/spec-dd/implement.md",
+  ".claude/commands/spec-dd/audit.md",
+  ".claude/commands/spec-dd/full-audit.md",
+  ".claude/commands/spec-dd/review-intake.md",
+  ".claude/commands/spec-dd/setup.md",
+  ".claude/commands/spec-dd/plan.md",
+];
+
+/** Files installed once, never overwritten */
+export const SCAFFOLD = [
+  "CLAUDE.md",
+  "AGENTS.md",
+  "specs/README.md",
+  "specs/example-spec.md",
+  "tracks.md",
+  "review.md",
+];
+
+/** Files where the header (up to first ---) is updated but content below is preserved */
+export const HEADER_UPDATABLE = ["working_tracks.md"];
+
+/** Files removed in this version (cleanup from prior installs) */
+export const REMOVED = [
+  "GUIDE.md",
+  ".claude/commands/implement.md",
+  ".claude/commands/audit.md",
+  ".claude/commands/full-audit.md",
+  ".claude/commands/review-intake.md",
+  ".claude/commands/setup.md",
+  "planning_prompt.md",
+  ".claude/commands/spec-dd.implement.md",
+  ".claude/commands/spec-dd.audit.md",
+  ".claude/commands/spec-dd.full-audit.md",
+  ".claude/commands/spec-dd.review-intake.md",
+  ".claude/commands/spec-dd.setup.md",
+  ".claude/commands/spec-dd.plan.md",
+];
+
+/** All installable files */
+export const ALL_FILES = [...FRAMEWORK_OWNED, ...SCAFFOLD, ...HEADER_UPDATABLE];
+
+/**
+ * Map destination path to template source path.
+ * Most files are 1:1 except .claude/ -> claude/
+ */
+export function srcFor(dest) {
+  if (dest.startsWith(".claude/")) {
+    return dest.replace(".claude/", "claude/");
+  }
+  return dest;
+}
