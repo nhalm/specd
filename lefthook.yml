@@ -6,6 +6,11 @@ pre-commit:
     fmt:
       run: make fmt
 
+commit-msg:
+  commands:
+    commitlint:
+      run: npx commitlint --edit {1}
+
 pre-push:
   commands:
     test:
