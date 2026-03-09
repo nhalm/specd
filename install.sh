@@ -179,6 +179,13 @@ do_update() {
       continue
     fi
 
+    # Bail if the existing file has no --- separator (can't safely split)
+    if ! grep -q '^---$' "$dest_path"; then
+      echo "  SKIP  ${dest} (no --- separator found — cannot update header safely)"
+      skipped=$((skipped + 1))
+      continue
+    fi
+
     # Extract new header (everything up to and including first ---)
     local new_header
     new_header="$(sed '/^---$/q' "$src_path")"
