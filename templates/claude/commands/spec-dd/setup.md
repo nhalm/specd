@@ -1,4 +1,4 @@
-You are helping set up a new spec-dd project. The framework files have already been installed via `install.sh init`. Your job is to customize them for this specific project.
+You are helping set up a new spec-dd project. The framework files have already been installed via `spec-dd init`. Your job is to customize them for this specific project.
 
 Study the codebase first — read existing code, build files, configs, package manifests, Dockerfiles, Makefiles, CI configs, and anything that reveals the tech stack, conventions, and project structure.
 

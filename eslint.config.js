@@ -17,6 +17,9 @@ export default [
       "prefer-const": "error",
       eqeqeq: ["error", "always"],
       "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "no-throw-literal": "error",
+      "prefer-promise-reject-errors": "error",
+      "no-return-await": "error",
     },
   },
   {

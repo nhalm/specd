@@ -41,16 +41,13 @@ Ambiguous findings from audits that need human judgment. Items sit here until th
 
 ## Build & Test
 
-<!-- Customize: document your project's build and test commands -->
-
-- Use the project's standard build tooling. See specs/ for build and toolchain details.
+- Run `make check` for linting and formatting, `make test` for the test suite
 - Validate with the full test suite, not just unit tests. If integration tests fail, that's a real failure — do not dismiss them.
 
 ## Conventions
 
-<!-- Customize: add project-specific conventions (language, style, patterns) -->
-
 - Follow patterns in existing code for naming, structure, and style
+- Match the language and framework conventions of the project
 - See specs/ for directory layout and project structure specs
 
 ### Interfaces and Dependencies

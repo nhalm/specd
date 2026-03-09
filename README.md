@@ -32,7 +32,16 @@ cd spec-dd-framework && make install
 spec-dd init /path/to/your-project
 ```
 
+> `make install` runs `npm install` and `npm link`, making the `spec-dd` command available globally.
+
 Prompts for your project name and description, then scaffolds the full framework into your repo. Works with new or existing projects.
+
+After init, verify these files were created in your project:
+
+- `AGENTS.md` — Agent guidelines (customize via `/spec-dd:setup`)
+- `specs/README.md` — Spec index
+- `.claude/commands/spec-dd/` — Slash commands
+- `working_tracks.md` — Work queue
 
 ## Getting Started
 
@@ -90,7 +99,7 @@ cat .claude/commands/spec-dd/plan.md | claude
 
 #### `/spec-dd:setup`
 
-Interactive onboarding for a freshly installed project. Analyzes your codebase to detect your tech stack, then walks you through customizing AGENTS.md (build commands, conventions) and the implement command (validation steps). Helps you write your first spec and clean up the example files. Run this once after `install.sh init`.
+Interactive onboarding for a freshly installed project. Analyzes your codebase to detect your tech stack, then walks you through customizing AGENTS.md (build commands, conventions) and the implement command (validation steps). Helps you write your first spec and clean up the example files. Run this once after `spec-dd init`.
 
 #### `/spec-dd:plan`
 
