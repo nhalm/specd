@@ -13,14 +13,14 @@ You write specs ──→ Agent reads specs ──→ Agent writes code ──�
 There are two modes of working:
 
 1. **Planning mode** — You and an AI work together on specs (no code). Use `planning_prompt.md`.
-2. **Loop mode** — An AI agent implements specs autonomously, one item at a time. Use `loop.sh`.
+2. **Loop mode** — An AI agent implements specs autonomously via a three-phase cycle. Use `loop.sh`.
 
 ## Quick Start
 
 ### 1. Copy the skeleton
 
 ```bash
-cp -r dd-workflow-spec/ /path/to/your-new-project/
+cp -r spec-dd-framework/ /path/to/your-new-project/
 cd /path/to/your-new-project/
 ```
 
@@ -37,15 +37,19 @@ Replace `{One-line project description}` in `specs/README.md`.
 
 This file tells agents how to behave in your project. Edit it to match your stack:
 
-- **Conventions section** — Add your naming conventions, project-specific patterns, crate/package prefixes.
-- **Test Organization** — Adjust for your language and test framework. The default assumes Rust with separate test files.
-- **Mocking and Traits** — Adjust for your language's abstraction patterns (interfaces, protocols, traits, etc.).
+- **Build & Test section** — Add your build commands, test runner, linter invocations.
+- **Conventions section** — Add your naming conventions, project-specific patterns.
+- **Interfaces and Dependencies** — Adjust for your language's abstraction patterns (interfaces, protocols, traits, etc.).
 
-### 4. Delete the example spec
+### 4. Customize validation in implement.md
+
+Edit `.claude/commands/implement.md` to add your project's validation steps (test commands, lint checks, type checking).
+
+### 5. Delete the example spec
 
 Remove `specs/example-spec.md` once you understand the format, or keep it as a reference. Either way, remove its row from `specs/README.md`.
 
-### 5. Write your first real spec
+### 6. Write your first real spec
 
 Create a new file in `specs/` following the format in `example-spec.md`:
 
@@ -57,68 +61,74 @@ Start at **Draft** status — just the overview and empty specification section.
 
 Add it to the phase table in `specs/README.md`.
 
-### 6. Set up tracks.md
+### 7. Populate working_tracks.md
 
-When a spec reaches "Ready", add a tracking section to `tracks.md`:
+When a spec reaches "Ready", add work items to `working_tracks.md`:
 
 ```markdown
-## your-feature.md v0.2
+## your-feature v0.2
 
-**Status:** In Progress
-
-**Implemented:**
-- (nothing yet)
-
-**Remaining:**
 - First implementation item
 - Second implementation item
-- Third item (blocked: other-spec.md)
-- Fourth item (future)
+- Third item (blocked: other-spec)
 ```
 
 Break specs into small, focused items. Each item should be one iteration of work. If an item has "and" in it, it's probably too big — split it.
 
-### 7. Run the loop
+### 8. Run the loop
 
 ```bash
 ./loop.sh
 ```
 
-This runs `prompt.md` through Claude Code repeatedly. Each iteration:
-1. Agent reads specs and tracks.md
-2. Picks ONE remaining item
-3. Implements it
-4. Commits the change
-5. Loop continues until nothing is left
+The loop runs three phases per cycle:
 
-The loop stops automatically when all remaining items are blocked or future.
+1. **Review intake** — Processes `review.md` items into `working_tracks.md`
+2. **Implementation** — Picks one unblocked item from `working_tracks.md`, implements it, moves it to `tracks.md`. Repeats until all items are done or blocked.
+3. **Audit** — Verifies Ready specs against code. If findings exist, adds them to `working_tracks.md` and starts a new cycle.
+
+The loop exits when the audit finds nothing new, or after 5 cycles.
+
+**Flags:**
+- `./loop.sh --skip-audit` — Skip the audit phase (implement only)
+- `./loop.sh --full-audit` — Audit both Ready and Implemented specs
 
 ## File Reference
 
 | File | Purpose |
 |------|---------|
 | `CLAUDE.md` | Entry point for Claude Code — points to AGENTS.md |
-| `AGENTS.md` | Agent guidelines: spec authority, conventions, test patterns |
+| `AGENTS.md` | Agent guidelines: spec authority, loop system, conventions |
 | `specs/README.md` | Spec index with status legend and phase tables |
 | `specs/*.md` | Individual spec files |
-| `tracks.md` | Tracks Implemented vs Remaining for each spec |
-| `prompt.md` | Agent prompt for the implementation loop |
+| `working_tracks.md` | Execution queue — remaining work items |
+| `tracks.md` | Done log — completed work items |
+| `review.md` | Ambiguous audit findings awaiting human judgment |
 | `planning_prompt.md` | Prompt for human+AI spec writing sessions |
-| `loop.sh` | Shell script that runs the implementation loop |
+| `loop.sh` | Shell script that runs the three-phase loop |
+| `.claude/commands/implement.md` | Agent prompt for implementing one work item |
+| `.claude/commands/audit.md` | Agent prompt for auditing Ready specs |
+| `.claude/commands/full-audit.md` | Agent prompt for auditing Ready + Implemented specs |
+| `.claude/commands/review-intake.md` | Agent prompt for processing review.md |
 
 ## The Spec Lifecycle
 
 ```
 Draft ──→ Ready ──→ Implemented
+                ↖────────────↙
+              (audit finds issues)
 ```
 
 | Stage | What happens | Who |
 |-------|-------------|-----|
-| **Draft** | Being specified. Could be a bare placeholder or actively being filled in. Use `planning_prompt.md` to iterate with AI assist. | Human |
-| **Ready** | Spec is complete. Detailed enough for an agent to implement without asking questions. | Human marks status |
-| **Implemented** | Fully implemented. Code matches spec. | Human marks status after verifying |
+| **Draft** | Being specified. Use `planning_prompt.md` to iterate with AI assist. | Human |
+| **Ready** | Spec is complete. Detailed enough for an agent to implement. | Human marks status |
+| **Implemented** | Fully implemented. Code matches spec. | `/audit` promotes when clean |
 
-**Key rule:** Only humans change spec status. Agents never touch it.
+**Status transitions:**
+- Humans move specs Draft → Ready
+- `/audit` promotes clean Ready specs to Implemented
+- `/full-audit` can demote Implemented specs back to Ready if regressions are found
 
 ## Writing Good Specs
 
@@ -143,8 +153,8 @@ A spec should cover one coherent component or feature. If you find yourself writ
 ## Tips
 
 - **Start small.** Write 2-3 specs for your foundation (project structure, build system, testing). Get those to "Implemented" before writing more.
-- **One item per loop iteration.** The prompt enforces this. Small items = reliable progress.
-- **Blocked items are fine.** Mark them in tracks.md and the agent will skip them.
-- **Future items are deferred.** Mark them and they won't be implemented until you're ready.
+- **One item per loop iteration.** The commands enforce this. Small items = reliable progress.
+- **Blocked items are fine.** Mark them with `(blocked: ...)` and the agent will skip them.
 - **Review agent commits.** The loop generates commits. Review them like you would any PR.
 - **Specs evolve.** Bump the version, add a changelog entry, and agents will adapt.
+- **Use review.md for ambiguity.** When audit finds something unclear, it goes to review.md for your judgment before becoming a work item.

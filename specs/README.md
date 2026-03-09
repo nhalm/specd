@@ -10,29 +10,37 @@ Specs are **steering documents** — they define WHAT to build and WHY, not HOW 
 
 1. **Spec phase** — We work through a spec until it's right
 2. **Loop phase** — `loop.sh` runs agents that implement the spec
-3. **Tracks** — [tracks.md](../tracks.md) tracks Implemented vs Remaining for each spec
+3. **Tracks** — [tracks.md](../tracks.md) records what's been implemented (done log)
 
 **Agents have autonomy** on implementation. The spec steers direction, the agent decides the code.
 
-**Status is human-controlled.** Agents NEVER change spec status. Only humans move specs between states (Draft → Ready → Implemented).
-
-**tracks.md is loop-agent territory.** Only loop agents (running via `loop.sh`) read and write tracks.md. During the spec phase, we NEVER touch tracks.md — loop agents detect spec version bumps and add Remaining items themselves by comparing the spec changelog to the code.
+**Status transitions.** Humans move specs from Draft → Ready. The `/audit` command manages Ready ↔ Implemented transitions — promoting clean specs to Implemented, demoting specs with new findings back to Ready.
 
 **Future items:** Items marked with `(future)` are for reference only. Do not implement them — they belong to a later phase or another spec.
 
-**Dependencies:** If a feature depends on another spec, check that spec's status. Only implement if the dependency is Ready or Implemented. Mark blocked features in Remaining with "(blocked: specname.md)".
+**Dependencies:** If a feature depends on another spec, check that spec's status. Only implement if the dependency is Ready or Implemented. Mark blocked features with "(blocked: specname)".
 
 **Versioning:** Specs use `v{major}.{minor}` versioning. Minor versions increment sequentially — v0.9 is followed by v0.10, not v1.0. Only increment the major version when explicitly instructed.
 
-## Bug Fix Punch List
+**Cross-references:** When referencing another spec in the body (Out of scope, Dependencies, inline text), use a real markdown link with the correct relative path. Changelog entries are historical records and use plain text names.
 
-[`specs/bug-fix.md`](bug-fix.md) is a living punch list for cross-cutting code bugs and small fixes that don't warrant a spec version bump. Items are grouped by owning spec.
+## Changelogs
 
-**Loop agents (implementation):** After selecting a spec to work on, check bug-fix.md for items under that spec's heading — they count as Remaining work. Fix one per iteration. Delete the item from the file after fixing and committing.
+Each spec has a Changelog section with human-readable summaries of what changed per version. Changelogs are a historical record — they describe WHAT changed and WHY, not granular implementation tasks.
 
-**Spec/planning agents (audit/review):** When auditing code or reviewing implementation, add newly discovered bugs to bug-fix.md under the appropriate spec heading. Use the same format as existing items. Items that can't be fixed yet should be marked `(blocked: reason)`.
+```markdown
+### v0.4 (2026-03-02)
 
-Items use `(blocked: ...)` annotations — same convention as tracks.md. Skip blocked items; remove the annotation when the blocker resolves.
+- Added business user authentication alongside existing platform users
+```
+
+**Work items** live in [working_tracks.md](../working_tracks.md), not in spec changelogs. The `/audit` command generates work items directly in working_tracks.md based on gaps between specs and code. Humans and planning agents can also write directly to working_tracks.md during spec phase.
+
+## Tracks (Done Log)
+
+[tracks.md](../tracks.md) is a record of completed work — what's been implemented, organized by spec and version. Loop agents write to it after completing a work item. It prevents duplicate work and shows progress.
+
+tracks.md does NOT contain "Remaining" lists. [working_tracks.md](../working_tracks.md) is the source of truth for remaining work. An item is done when it's in tracks.md.
 
 ## Status Legend
 

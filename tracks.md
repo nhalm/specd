@@ -1,37 +1,32 @@
 # {PROJECT_NAME} Implementation Tracking
 
 <!--
+This file is a DONE LOG — it records what has been implemented, not what remains.
+
 HOW TO USE THIS FILE:
 
-1. Section header = "## spec-name.md vX.Y" - must match current spec version
-2. If a spec version > section version and the section still has remaining items, complete the remaining items.
-3. If spec version > section version: check spec changelog and spec, add new items to Remaining, update header
-4. If no section exists: compare spec to code, create section with Implemented and Remaining list above all other sections and below these instructions.
-5. Pick ONE item from Remaining (skip blocked items)
-6. Implement it, verify with tests
-7. Move item from Remaining to Implemented
-8. After moving an item to Implemented, search ALL Remaining sections for "(blocked: ...)" annotations that reference the work you just completed. Remove resolved blockers. If an item has multiple blockers and only some are resolved, remove the resolved ones and keep the rest.
-9. SPEC IS SOURCE OF TRUTH - if code contradicts spec, that's a Remaining item to fix (see AGENTS.md)
-10. Check spec Changelog for changes that invalidate existing code
-11. When adding new sections add to the TOP of the tracking section if new spec version.
-12. If your assigned spec has no Remaining items, scan ALL other sections for Remaining items and pick one to implement. Work is not done until every section has Remaining: (none).
+1. Section header = "## spec-name vX.Y" — must match the spec version you're working on
+2. When you complete a work item from working_tracks.md, move it here under the matching section
+3. If no section exists for the current spec version, create one at the TOP (below these instructions)
+4. Before picking a work item, check this file — if it's already listed here, it's done
+5. After implementing, search ALL sections for "(blocked: ...)" annotations that reference the work you just completed. Remove resolved blockers.
+6. Items use "(blocked: ...)" annotations — same convention as working_tracks.md
+
+WHAT GOES HERE:
+- Work items from working_tracks.md, recorded after completion
+
+WHAT DOES NOT GO HERE:
+- "Remaining" lists — working_tracks.md is the source of truth for what needs doing
+- Discovery or TODO items — those belong in working_tracks.md or review.md
 -->
 
 ---
 
-<!-- Add tracking sections as specs reach "Ready" status. Example:
+<!-- Add tracking sections as work is completed. Example:
 
-## example-spec.md v0.1
+## example-spec v0.1
 
-**Status:** In Progress
-
-**Implemented:**
-- (nothing yet)
-
-**Remaining:**
-- Item one from the spec
-- Item two from the spec
-- Item three (blocked: other-spec.md)
-- Item four (future)
+- Completed work item description
+- Another completed item
 
 -->
