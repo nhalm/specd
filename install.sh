@@ -12,6 +12,7 @@ FRAMEWORK_OWNED=(
   ".claude/commands/audit.md"
   ".claude/commands/full-audit.md"
   ".claude/commands/review-intake.md"
+  ".claude/commands/setup.md"
 )
 
 # Files installed once, never overwritten

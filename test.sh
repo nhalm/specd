@@ -62,6 +62,7 @@ assert "init creates .claude/commands/implement.md" "[ -f '$tmp/.claude/commands
 assert "init creates .claude/commands/audit.md" "[ -f '$tmp/.claude/commands/audit.md' ]"
 assert "init creates .claude/commands/full-audit.md" "[ -f '$tmp/.claude/commands/full-audit.md' ]"
 assert "init creates .claude/commands/review-intake.md" "[ -f '$tmp/.claude/commands/review-intake.md' ]"
+assert "init creates .claude/commands/setup.md" "[ -f '$tmp/.claude/commands/setup.md' ]"
 
 assert "init replaces {PROJECT_NAME} in AGENTS.md" \
   "grep -q 'TestProject' '$tmp/AGENTS.md' && ! grep -q '{PROJECT_NAME}' '$tmp/AGENTS.md'"
