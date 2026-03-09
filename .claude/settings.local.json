@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Read(//private/tmp/spec-dd-test/**)",
+      "Bash(printf 'TestProject\\\\nA test project\\\\n')",
+      "Bash(node /Users/nhalm/work/spec-dd-framework/bin/cli.js init)"
+    ]
+  }
+}

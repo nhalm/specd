@@ -1,0 +1,12 @@
+{
+  "name": "spec-dd",
+  "version": "0.1.0",
+  "description": "Spec-driven development framework for AI agents",
+  "bin": {
+    "spec-dd": "./bin/cli.js"
+  },
+  "files": [
+    "bin/",
+    "templates/"
+  ]
+}
