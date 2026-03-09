@@ -19,7 +19,6 @@ const FRAMEWORK_OWNED_FILES = [
 const SCAFFOLD_FILES = [
   'CLAUDE.md',
   'AGENTS.md',
-  'GUIDE.md',
   'specs/README.md',
   'specs/example-spec.md',
   'tracks.md',
@@ -28,7 +27,9 @@ const SCAFFOLD_FILES = [
   'planning_prompt.md',
 ];
 
-const REMOVED = [];
+const REMOVED = [
+  'GUIDE.md',
+];
 
 const TEMPLATE_MAP = [
   { src: 'claude/commands/implement.md', dest: '.claude/commands/implement.md' },
@@ -37,7 +38,6 @@ const TEMPLATE_MAP = [
   { src: 'claude/commands/review-intake.md', dest: '.claude/commands/review-intake.md' },
   { src: 'CLAUDE.md', dest: 'CLAUDE.md' },
   { src: 'AGENTS.md', dest: 'AGENTS.md' },
-  { src: 'GUIDE.md', dest: 'GUIDE.md' },
   { src: 'loop.sh', dest: 'loop.sh' },
   { src: 'planning_prompt.md', dest: 'planning_prompt.md' },
   { src: 'specs/README.md', dest: 'specs/README.md' },
