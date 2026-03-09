@@ -56,13 +56,13 @@ assert "init creates specs/README.md" "[ -f '$tmp/specs/README.md' ]"
 assert "init creates specs/example-spec.md" "[ -f '$tmp/specs/example-spec.md' ]"
 assert "init creates tracks.md" "[ -f '$tmp/tracks.md' ]"
 assert "init creates review.md" "[ -f '$tmp/review.md' ]"
-assert "init creates planning_prompt.md" "[ -f '$tmp/planning_prompt.md' ]"
 assert "init creates working_tracks.md" "[ -f '$tmp/working_tracks.md' ]"
 assert "init creates .claude/commands/spec-dd.implement.md" "[ -f '$tmp/.claude/commands/spec-dd.implement.md' ]"
 assert "init creates .claude/commands/spec-dd.audit.md" "[ -f '$tmp/.claude/commands/spec-dd.audit.md' ]"
 assert "init creates .claude/commands/spec-dd.full-audit.md" "[ -f '$tmp/.claude/commands/spec-dd.full-audit.md' ]"
 assert "init creates .claude/commands/spec-dd.review-intake.md" "[ -f '$tmp/.claude/commands/spec-dd.review-intake.md' ]"
 assert "init creates .claude/commands/spec-dd.setup.md" "[ -f '$tmp/.claude/commands/spec-dd.setup.md' ]"
+assert "init creates .claude/commands/spec-dd.plan.md" "[ -f '$tmp/.claude/commands/spec-dd.plan.md' ]"
 
 assert "init replaces {PROJECT_NAME} in AGENTS.md" \
   "grep -q 'TestProject' '$tmp/AGENTS.md' && ! grep -q '{PROJECT_NAME}' '$tmp/AGENTS.md'"
@@ -179,10 +179,10 @@ rm -rf "$tmp"
 # update creates new scaffold files that didn't exist in prior version
 tmp="$(make_tmp)"
 run_init "$tmp"
-rm -f "$tmp/planning_prompt.md"
+rm -f "$tmp/review.md"
 run_update "$tmp"
 assert "update creates missing scaffold files" \
-  "[ -f '$tmp/planning_prompt.md' ]"
+  "[ -f '$tmp/review.md' ]"
 rm -rf "$tmp"
 
 # ── doctor tests ────────────────────────────────────────────────────

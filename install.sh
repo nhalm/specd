@@ -13,6 +13,7 @@ FRAMEWORK_OWNED=(
   ".claude/commands/spec-dd.full-audit.md"
   ".claude/commands/spec-dd.review-intake.md"
   ".claude/commands/spec-dd.setup.md"
+  ".claude/commands/spec-dd.plan.md"
 )
 
 # Files installed once, never overwritten
@@ -23,7 +24,6 @@ SCAFFOLD=(
   "specs/example-spec.md"
   "tracks.md"
   "review.md"
-  "planning_prompt.md"
 )
 
 # Files where the header (everything up to and including first ---) is
@@ -40,6 +40,7 @@ REMOVED=(
   ".claude/commands/full-audit.md"
   ".claude/commands/review-intake.md"
   ".claude/commands/setup.md"
+  "planning_prompt.md"
 )
 
 # Map template source path to destination path

@@ -33,15 +33,66 @@ git clone git@github.com:nhalm/spec-dd-framework.git
 
 Prompts for your project name and description, then scaffolds the full framework into your repo. Works with new or existing projects.
 
-Then open Claude Code in your project and run `/spec-dd.setup`. It will analyze your codebase and walk you through customizing:
+## Getting Started
+
+After installing, open Claude Code in your project and run the setup command:
+
+```bash
+cd your-project
+claude
+> /spec-dd.setup
+```
+
+This analyzes your codebase and walks you through customizing:
 
 - **`AGENTS.md`** — Build commands, test runner, language conventions
 - **`.claude/commands/spec-dd.implement.md`** — Validation steps (test suite, linter, type checker)
 - **First spec** — Helps you write your first spec based on what you want to build
 
-## What Gets Installed
+## Usage
 
-The framework installs these files into your project:
+### Planning — write and refine specs
+
+Start a planning session to work on specs collaboratively with Claude. No code gets written — only markdown.
+
+```bash
+cat .claude/commands/spec-dd.plan.md | claude
+```
+
+Or from inside Claude Code:
+
+```
+/spec-dd.plan
+```
+
+Use this to design new features, audit existing specs against code, and break work into items in `working_tracks.md`.
+
+### Implementing — autonomous loop
+
+Once specs are Ready and `working_tracks.md` has work items, run the loop:
+
+```bash
+./loop.sh                # Standard: implement + audit Ready specs
+./loop.sh --skip-audit   # Implement only, no audit phase
+./loop.sh --full-audit   # Audit both Ready and Implemented specs
+```
+
+The loop runs autonomously — agents implement, commit, and move on. Review commits after the fact.
+
+### Manual commands
+
+You can also run individual phases from inside Claude Code:
+
+| Command | Purpose |
+|---------|---------|
+| `/spec-dd.setup` | Interactive project setup after install |
+| `/spec-dd.plan` | Collaborative spec writing and analysis |
+| `/spec-dd.implement` | Implement one work item from working_tracks.md |
+| `/spec-dd.audit` | Audit Ready specs against code |
+| `/spec-dd.full-audit` | Audit Ready + Implemented specs |
+| `/spec-dd.review-intake` | Process review.md items into working_tracks.md |
+
+## What Gets Installed
 
 ### Specs (you write these)
 
@@ -63,32 +114,14 @@ Specs go through a lifecycle: **Draft** (being written) → **Ready** (complete,
 
 `working_tracks.md` is the single source of truth for what needs doing. Items are small, one-iteration units of work. Blocked items are annotated with `(blocked: reason)` and skipped until unblocked.
 
-### The autonomous loop
-
-| File | Purpose |
-|------|---------|
-| `loop.sh` | Orchestrates the three-phase cycle |
-| `.claude/commands/spec-dd.implement.md` | Agent prompt: pick one item, implement, validate, commit |
-| `.claude/commands/spec-dd.audit.md` | Agent prompt: audit Ready specs against code |
-| `.claude/commands/spec-dd.full-audit.md` | Agent prompt: audit Ready + Implemented specs |
-| `.claude/commands/spec-dd.review-intake.md` | Agent prompt: process review.md into working_tracks.md |
-| `.claude/commands/spec-dd.setup.md` | Interactive project setup — customizes AGENTS.md, validation, first spec |
-
 ### Configuration
 
 | File | Purpose |
 |------|---------|
 | `CLAUDE.md` | Entry point for Claude Code — points to AGENTS.md |
 | `AGENTS.md` | Agent behavior guidelines: spec authority, loop system, conventions |
-| `planning_prompt.md` | Prompt for collaborative spec-writing sessions (no code) |
 
 ## How the Loop Works
-
-```bash
-./loop.sh                # Standard: implement + audit Ready specs
-./loop.sh --skip-audit   # Implement only, no audit phase
-./loop.sh --full-audit   # Audit both Ready and Implemented specs
-```
 
 Each cycle has three phases:
 
@@ -111,12 +144,6 @@ The loop runs up to 5 cycles. It exits early if the audit finds nothing new (all
 
 Each phase uses a different model — fast/cheap for review intake, balanced for implementation, strongest for audit. Models are configurable at the top of `loop.sh`.
 
-## Two Modes of Working
-
-**Planning mode** — You and Claude work together on specs. No code gets written. Use `planning_prompt.md` to start a session. Good for designing new features, auditing existing specs against code, and breaking work into items.
-
-**Loop mode** — Agents work autonomously. You review commits after the fact. Use `loop.sh`. Good for grinding through implementation once specs are solid.
-
 ## Updating the Framework
 
 Pull the latest version of this repo and run update against your project:
@@ -133,8 +160,6 @@ To check your installation:
 ```bash
 ./spec-dd-framework/install.sh doctor /path/to/your-project
 ```
-
-Validates all expected files exist, loop.sh is executable, and required tools are available.
 
 ## Writing Good Specs
 
