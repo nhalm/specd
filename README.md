@@ -79,18 +79,37 @@ Once specs are Ready and `working_tracks.md` has work items, run the loop:
 
 The loop runs autonomously — agents implement, commit, and move on. Review commits after the fact.
 
-### Manual commands
+### Commands
 
-You can also run individual phases from inside Claude Code:
+All commands are available as slash commands inside Claude Code, or can be piped directly:
 
-| Command | Purpose |
-|---------|---------|
-| `/spec-dd:setup` | Interactive project setup after install |
-| `/spec-dd:plan` | Collaborative spec writing and analysis |
-| `/spec-dd:implement` | Implement one work item from working_tracks.md |
-| `/spec-dd:audit` | Audit Ready specs against code |
-| `/spec-dd:full-audit` | Audit Ready + Implemented specs |
-| `/spec-dd:review-intake` | Process review.md items into working_tracks.md |
+```bash
+cat .claude/commands/spec-dd/plan.md | claude
+```
+
+#### `/spec-dd:setup`
+
+Interactive onboarding for a freshly installed project. Analyzes your codebase to detect your tech stack, then walks you through customizing AGENTS.md (build commands, conventions) and the implement command (validation steps). Helps you write your first spec and clean up the example files. Run this once after `install.sh init`.
+
+#### `/spec-dd:plan`
+
+Collaborative spec-writing session. You and Claude work together on creating and refining specs — no code gets written, only markdown. When auditing existing specs against code, it uses a three-phase workflow: **Gather** (launch parallel research agents to find discrepancies), **Validate** (cross-check agent findings against actual code to filter false positives), **Write** (record confirmed findings to `working_tracks.md` or propose spec updates). This prevents the duplicate/inaccurate findings that happen when agents report without verification.
+
+#### `/spec-dd:implement`
+
+Picks ONE unblocked item from `working_tracks.md`, reads the full spec for context, implements it, runs validation (tests, linting), commits the change, then moves the item to `tracks.md`. Checks for blocked items that can be unblocked by the completed work. Outputs `LOOP_COMPLETE: true` when all remaining items are blocked or the queue is empty. The loop runs this repeatedly until done.
+
+#### `/spec-dd:audit`
+
+Audits all specs with status **Ready** against the actual code. For each spec, launches a research agent (Sonnet) to compare spec requirements to implementation, then validates every finding by reading the actual code — agent research is frequently wrong about exact details. Only flags things that are **functionally broken**: wrong results, missing features, incorrect types at boundaries. Cosmetic differences and pattern preferences are not findings. Writes confirmed issues to `working_tracks.md`, ambiguous findings to `review.md`, and promotes clean specs to Implemented status.
+
+#### `/spec-dd:full-audit`
+
+Same as `/spec-dd:audit` but also audits specs with status **Implemented**. If an Implemented spec has regressions, it gets demoted back to Ready with a version bump and new work items in `working_tracks.md`. Use this periodically to catch regressions, or with `./loop.sh --full-audit`.
+
+#### `/spec-dd:review-intake`
+
+Processes `review.md` into actionable work items. Reads each ambiguous finding, consults the referenced spec, creates a concrete work item in `working_tracks.md`, and clears the processed entry from `review.md`. If a finding requires a spec change, bumps the spec version and adds a changelog entry. Does not implement anything — only populates the work queue. The loop runs this at the start of each cycle so you can make decisions in `review.md` between runs.
 
 ## What Gets Installed
 
