@@ -157,10 +157,21 @@ do_update() {
     updated=$((updated + 1))
   done
 
-  # Skip scaffold files
+  # Scaffold files: create if missing, skip if exists
   for dest in "${SCAFFOLD[@]}"; do
-    echo "  SKIP  ${dest} (scaffold — not overwritten)"
-    skipped=$((skipped + 1))
+    local dest_path="${target}/${dest}"
+    if [ -f "$dest_path" ]; then
+      echo "  SKIP  ${dest} (scaffold — not overwritten)"
+      skipped=$((skipped + 1))
+    else
+      local src
+      src="$(src_for "$dest")"
+      local src_path="${TEMPLATES_DIR}/${src}"
+      mkdir -p "$(dirname "$dest_path")"
+      cp "$src_path" "$dest_path"
+      echo "  CREATE  ${dest} (new in this version)"
+      updated=$((updated + 1))
+    fi
   done
 
   # Update headers on header-updatable files (preserve content below ---)

@@ -175,6 +175,15 @@ assert "update creates working_tracks.md if it doesn't exist" \
   "[ -f '$tmp/working_tracks.md' ]"
 rm -rf "$tmp"
 
+# update creates new scaffold files that didn't exist in prior version
+tmp="$(make_tmp)"
+run_init "$tmp"
+rm -f "$tmp/planning_prompt.md"
+run_update "$tmp"
+assert "update creates missing scaffold files" \
+  "[ -f '$tmp/planning_prompt.md' ]"
+rm -rf "$tmp"
+
 # ── doctor tests ────────────────────────────────────────────────────
 
 echo ""
