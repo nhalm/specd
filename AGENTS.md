@@ -1,4 +1,4 @@
-# spec-dd-framework Agent Guidelines
+# specd Agent Guidelines
 
 ## Project Overview
 
@@ -7,7 +7,7 @@ CLI tool for scaffolding and managing spec-driven development projects. Written 
 ## Build & Test
 
 ```bash
-make install    # npm install + npm link (makes `spec-dd` CLI available)
+make install    # npm install + npm link (makes `specd` CLI available)
 make check      # lint + fmt
 make test       # vitest
 make fix        # auto-fix lint and formatting

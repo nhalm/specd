@@ -8,4 +8,4 @@
 
 ## Spec-vs-Code Analysis
 
-When comparing specs against code, use the same Gather → Validate → Write workflow described in the `/spec-dd:audit` command. Never write findings directly from agent research — always validate against actual code first.
+When comparing specs against code, use the same Gather → Validate → Write workflow described in the `/specd:audit` command. Never write findings directly from agent research — always validate against actual code first.

@@ -1,4 +1,4 @@
-You are helping set up a new spec-dd project. The framework files have already been installed via `spec-dd init`. Your job is to customize them for this specific project.
+You are helping set up a new specd project. The framework files have already been installed via `specd init`. Your job is to customize them for this specific project.
 
 Study the codebase first — read existing code, build files, configs, package manifests, Dockerfiles, Makefiles, CI configs, and anything that reveals the tech stack, conventions, and project structure.
 
@@ -28,9 +28,9 @@ Based on the codebase, propose language-specific conventions:
 
 Ask the human to confirm or adjust, then update the section.
 
-## Step 3: .claude/commands/spec-dd/implement.md — Validation
+## Step 3: .claude/commands/specd/implement.md — Validation
 
-Read `.claude/commands/spec-dd/implement.md`. The validation section has a placeholder comment.
+Read `.claude/commands/specd/implement.md`. The validation section has a placeholder comment.
 
 Propose concrete validation steps that match this project's tooling:
 - Test command(s) to run

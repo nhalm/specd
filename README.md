@@ -1,4 +1,4 @@
-# spec-dd
+# specd
 
 A framework for building software with AI agents using spec-driven development. You write specifications that define **what** to build and **why**. AI agents autonomously implement the code, audit it against the specs, and surface issues for your review.
 
@@ -8,7 +8,7 @@ Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
 Most AI coding workflows are conversational — you prompt, the agent codes, you course-correct in real time. That works for small tasks but breaks down on larger projects where requirements are complex and context gets lost between sessions.
 
-spec-dd replaces that with a document-driven workflow:
+specd replaces that with a document-driven workflow:
 
 1. **You write specs** — markdown documents that define behavior, contracts, and interfaces for each component
 2. **Agents implement autonomously** — a loop picks work items one at a time, implements them, commits, and moves on
@@ -27,20 +27,20 @@ The specs are the source of truth. If code contradicts a spec, the code is wrong
 Clone this repo, install dependencies, then run the CLI targeting your project:
 
 ```bash
-git clone git@github.com:nhalm/spec-dd-framework.git
-cd spec-dd-framework && make install
-spec-dd init /path/to/your-project
+git clone git@github.com:nhalm/specd.git
+cd specd && make install
+specd init /path/to/your-project
 ```
 
-> `make install` runs `npm install` and `npm link`, making the `spec-dd` command available globally.
+> `make install` runs `npm install` and `npm link`, making the `specd` command available globally.
 
 Prompts for your project name and description, then scaffolds the full framework into your repo. Works with new or existing projects.
 
 After init, verify these files were created in your project:
 
-- `AGENTS.md` — Agent guidelines (customize via `/spec-dd:setup`)
+- `AGENTS.md` — Agent guidelines (customize via `/specd:setup`)
 - `specs/README.md` — Spec index
-- `.claude/commands/spec-dd/` — Slash commands
+- `.claude/commands/specd/` — Slash commands
 - `working_tracks.md` — Work queue
 
 ## Getting Started
@@ -50,13 +50,13 @@ After installing, open Claude Code in your project and run the setup command:
 ```bash
 cd your-project
 claude
-> /spec-dd:setup
+> /specd:setup
 ```
 
 This analyzes your codebase and walks you through customizing:
 
 - **`AGENTS.md`** — Build commands, test runner, language conventions
-- **`.claude/commands/spec-dd/implement.md`** — Validation steps (test suite, linter, type checker)
+- **`.claude/commands/specd/implement.md`** — Validation steps (test suite, linter, type checker)
 - **First spec** — Helps you write your first spec based on what you want to build
 
 ## Usage
@@ -66,13 +66,13 @@ This analyzes your codebase and walks you through customizing:
 Start a planning session to work on specs collaboratively with Claude. No code gets written — only markdown.
 
 ```bash
-cat .claude/commands/spec-dd/plan.md | claude
+cat .claude/commands/specd/plan.md | claude
 ```
 
 Or from inside Claude Code:
 
 ```
-/spec-dd:plan
+/specd:plan
 ```
 
 Use this to design new features, audit existing specs against code, and break work into items in `working_tracks.md`.
@@ -94,30 +94,30 @@ The loop runs autonomously — agents implement, commit, and move on. Review com
 All commands are available as slash commands inside Claude Code, or can be piped directly:
 
 ```bash
-cat .claude/commands/spec-dd/plan.md | claude
+cat .claude/commands/specd/plan.md | claude
 ```
 
-#### `/spec-dd:setup`
+#### `/specd:setup`
 
-Interactive onboarding for a freshly installed project. Analyzes your codebase to detect your tech stack, then walks you through customizing AGENTS.md (build commands, conventions) and the implement command (validation steps). Helps you write your first spec and clean up the example files. Run this once after `spec-dd init`.
+Interactive onboarding for a freshly installed project. Analyzes your codebase to detect your tech stack, then walks you through customizing AGENTS.md (build commands, conventions) and the implement command (validation steps). Helps you write your first spec and clean up the example files. Run this once after `specd init`.
 
-#### `/spec-dd:plan`
+#### `/specd:plan`
 
 Collaborative spec-writing session. You and Claude work together on creating and refining specs — no code gets written, only markdown. When auditing existing specs against code, it uses a three-phase workflow: **Gather** (launch parallel research agents to find discrepancies), **Validate** (cross-check agent findings against actual code to filter false positives), **Write** (record confirmed findings to `working_tracks.md` or propose spec updates). This prevents the duplicate/inaccurate findings that happen when agents report without verification.
 
-#### `/spec-dd:implement`
+#### `/specd:implement`
 
 Picks ONE unblocked item from `working_tracks.md`, reads the full spec for context, implements it, runs validation (tests, linting), commits the change, then moves the item to `tracks.md`. Checks for blocked items that can be unblocked by the completed work. Outputs `LOOP_COMPLETE: true` when all remaining items are blocked or the queue is empty. The loop runs this repeatedly until done.
 
-#### `/spec-dd:audit`
+#### `/specd:audit`
 
 Audits all specs with status **Ready** against the actual code. For each spec, launches a research agent (Sonnet) to compare spec requirements to implementation, then validates every finding by reading the actual code — agent research is frequently wrong about exact details. Only flags things that are **functionally broken**: wrong results, missing features, incorrect types at boundaries. Cosmetic differences and pattern preferences are not findings. Writes confirmed issues to `working_tracks.md`, ambiguous findings to `review.md`, and promotes clean specs to Implemented status.
 
-#### `/spec-dd:full-audit`
+#### `/specd:full-audit`
 
-Same as `/spec-dd:audit` but also audits specs with status **Implemented**. If an Implemented spec has regressions, it gets demoted back to Ready with a version bump and new work items in `working_tracks.md`. Use this periodically to catch regressions, or with `./loop.sh --full-audit`.
+Same as `/specd:audit` but also audits specs with status **Implemented**. If an Implemented spec has regressions, it gets demoted back to Ready with a version bump and new work items in `working_tracks.md`. Use this periodically to catch regressions, or with `./loop.sh --full-audit`.
 
-#### `/spec-dd:review-intake`
+#### `/specd:review-intake`
 
 Processes `review.md` into actionable work items. Reads each ambiguous finding, consults the referenced spec, creates a concrete work item in `working_tracks.md`, and clears the processed entry from `review.md`. If a finding requires a spec change, bumps the spec version and adds a changelog entry. Does not implement anything — only populates the work queue. The loop runs this at the start of each cycle so you can make decisions in `review.md` between runs.
 
@@ -178,8 +178,8 @@ Each phase uses a different model — fast/cheap for review intake, balanced for
 Pull the latest version of this repo and run update against your project:
 
 ```bash
-cd spec-dd-framework && git pull && make install
-spec-dd update /path/to/your-project
+cd specd && git pull && make install
+specd update /path/to/your-project
 ```
 
 Overwrites framework-owned files (loop.sh, command prompts) without touching files you've customized (AGENTS.md, specs, tracks). If a framework version removes a file, update cleans it up automatically.
@@ -187,7 +187,7 @@ Overwrites framework-owned files (loop.sh, command prompts) without touching fil
 To check your installation:
 
 ```bash
-spec-dd doctor /path/to/your-project
+specd doctor /path/to/your-project
 ```
 
 ## Writing Good Specs

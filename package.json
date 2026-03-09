@@ -1,9 +1,9 @@
 {
-  "name": "spec-dd-framework",
+  "name": "specd",
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "spec-dd": "./src/cli.js"
+    "specd": "./src/cli.js"
   },
   "scripts": {
     "lint": "eslint .",

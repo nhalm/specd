@@ -11,12 +11,12 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const TEMPLATES_DIR = resolve(__dirname, "..", "templates");
 
 function usage() {
-  console.log("spec-dd — Spec-driven development framework for AI agents");
+  console.log("specd — Spec-driven development framework for AI agents");
   console.log("");
-  console.log("Usage: spec-dd <command> [target-dir]");
+  console.log("Usage: specd <command> [target-dir]");
   console.log("");
   console.log("Commands:");
-  console.log("  init   [dir]   Initialize a project with the spec-dd framework (default: cwd)");
+  console.log("  init   [dir]   Initialize a project with the specd framework (default: cwd)");
   console.log("  update [dir]   Update framework-owned files to the latest version");
   console.log("  doctor [dir]   Check that all expected files are in place");
   console.log("");

@@ -66,7 +66,7 @@ while [ $CYCLE -lt $MAX_CYCLES ]; do
     TIMESTAMP=$(date +%Y%m%d-%H%M%S)
     REVIEW_OUTPUT="/tmp/${PWD##*/}-review-${TIMESTAMP}.txt"
 
-    cat .claude/commands/spec-dd/review-intake.md | claude -p \
+    cat .claude/commands/specd/review-intake.md | claude -p \
         --model "$MODEL_REVIEW" \
         --dangerously-skip-permissions \
         --output-format=stream-json \
@@ -86,7 +86,7 @@ while [ $CYCLE -lt $MAX_CYCLES ]; do
 
         echo "=== Cycle ${CYCLE} — Task ${TASK_NUM} ==="
 
-        cat .claude/commands/spec-dd/implement.md | claude -p \
+        cat .claude/commands/specd/implement.md | claude -p \
             --model "$MODEL_IMPLEMENT" \
             --dangerously-skip-permissions \
             --output-format=stream-json \
@@ -113,9 +113,9 @@ while [ $CYCLE -lt $MAX_CYCLES ]; do
         exit 0
     fi
 
-    AUDIT_CMD="spec-dd/audit.md"
+    AUDIT_CMD="specd/audit.md"
     if [ "$AUDIT_MODE" = "full" ]; then
-        AUDIT_CMD="spec-dd/full-audit.md"
+        AUDIT_CMD="specd/full-audit.md"
     fi
 
     echo "=== Audit phase (${AUDIT_MODE}) ==="

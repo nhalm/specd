@@ -25,7 +25,7 @@ function computeChecksum(filePath) {
 }
 
 function loadChecksums(targetDir) {
-  const checksumFile = join(targetDir, ".spec-dd-checksums.json");
+  const checksumFile = join(targetDir, ".specd-checksums.json");
   if (existsSync(checksumFile)) {
     return JSON.parse(readFileSync(checksumFile, "utf-8"));
   }
@@ -34,7 +34,7 @@ function loadChecksums(targetDir) {
 
 function saveChecksums(targetDir, checksums) {
   writeFileSync(
-    join(targetDir, ".spec-dd-checksums.json"),
+    join(targetDir, ".specd-checksums.json"),
     JSON.stringify(checksums, null, 2) + "\n",
   );
 }
@@ -77,8 +77,8 @@ export function init(targetDir, templatesDir, { projectName, description }) {
     chmodSync(loopPath, 0o755);
   }
 
-  writeFileSync(join(targetDir, ".spec-dd-version"), VERSION);
-  messages.push("  CREATE  .spec-dd-version");
+  writeFileSync(join(targetDir, ".specd-version"), VERSION);
+  messages.push("  CREATE  .specd-version");
 
   // Compute and save checksums for all created files
   const checksums = {};
@@ -89,7 +89,7 @@ export function init(targetDir, templatesDir, { projectName, description }) {
     }
   }
   saveChecksums(targetDir, checksums);
-  messages.push("  CREATE  .spec-dd-checksums.json");
+  messages.push("  CREATE  .specd-checksums.json");
 
   messages.push("");
   messages.push(`Done. ${copied} files created, ${skipped} skipped.`);
@@ -108,11 +108,11 @@ export function update(targetDir, templatesDir, { dryRun = false } = {}) {
   const storedChecksums = loadChecksums(targetDir);
   const newChecksums = { ...storedChecksums };
 
-  const versionFile = join(targetDir, ".spec-dd-version");
+  const versionFile = join(targetDir, ".specd-version");
   if (existsSync(versionFile)) {
     messages.push(`Current version: ${readFileSync(versionFile, "utf-8").trim()}`);
   } else {
-    messages.push("No .spec-dd-version found (first update).");
+    messages.push("No .specd-version found (first update).");
   }
   messages.push(`Updating to: ${VERSION}`);
   messages.push("");
@@ -282,19 +282,19 @@ export function doctor(targetDir) {
     fail++;
   }
 
-  const versionFile = join(targetDir, ".spec-dd-version");
+  const versionFile = join(targetDir, ".specd-version");
   if (existsSync(versionFile)) {
     const projectVersion = readFileSync(versionFile, "utf-8").trim();
-    messages.push(`  PASS  .spec-dd-version (${projectVersion})`);
+    messages.push(`  PASS  .specd-version (${projectVersion})`);
     pass++;
     if (projectVersion !== VERSION) {
       messages.push(
-        `  WARN  Version mismatch: project ${projectVersion}, framework ${VERSION} (run 'spec-dd update')`,
+        `  WARN  Version mismatch: project ${projectVersion}, framework ${VERSION} (run 'specd update')`,
       );
       fail++;
     }
   } else {
-    messages.push("  FAIL  .spec-dd-version exists");
+    messages.push("  FAIL  .specd-version exists");
     fail++;
   }
 
