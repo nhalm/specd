@@ -33,10 +33,10 @@ git clone git@github.com:nhalm/spec-dd-framework.git
 
 Prompts for your project name and description, then scaffolds the full framework into your repo. Works with new or existing projects.
 
-Then open Claude Code in your project and run `/setup`. It will analyze your codebase and walk you through customizing:
+Then open Claude Code in your project and run `/spec-dd.setup`. It will analyze your codebase and walk you through customizing:
 
 - **`AGENTS.md`** — Build commands, test runner, language conventions
-- **`.claude/commands/implement.md`** — Validation steps (test suite, linter, type checker)
+- **`.claude/commands/spec-dd.implement.md`** — Validation steps (test suite, linter, type checker)
 - **First spec** — Helps you write your first spec based on what you want to build
 
 ## What Gets Installed
@@ -68,11 +68,11 @@ Specs go through a lifecycle: **Draft** (being written) → **Ready** (complete,
 | File | Purpose |
 |------|---------|
 | `loop.sh` | Orchestrates the three-phase cycle |
-| `.claude/commands/implement.md` | Agent prompt: pick one item, implement, validate, commit |
-| `.claude/commands/audit.md` | Agent prompt: audit Ready specs against code |
-| `.claude/commands/full-audit.md` | Agent prompt: audit Ready + Implemented specs |
-| `.claude/commands/review-intake.md` | Agent prompt: process review.md into working_tracks.md |
-| `.claude/commands/setup.md` | Interactive project setup — customizes AGENTS.md, validation, first spec |
+| `.claude/commands/spec-dd.implement.md` | Agent prompt: pick one item, implement, validate, commit |
+| `.claude/commands/spec-dd.audit.md` | Agent prompt: audit Ready specs against code |
+| `.claude/commands/spec-dd.full-audit.md` | Agent prompt: audit Ready + Implemented specs |
+| `.claude/commands/spec-dd.review-intake.md` | Agent prompt: process review.md into working_tracks.md |
+| `.claude/commands/spec-dd.setup.md` | Interactive project setup — customizes AGENTS.md, validation, first spec |
 
 ### Configuration
 

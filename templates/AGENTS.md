@@ -16,9 +16,9 @@ The autonomous loop is defined in `loop.sh`. Commands live in `.claude/commands/
 
 | Command          | Purpose                                                                        |
 | ---------------- | ------------------------------------------------------------------------------ |
-| `/implement`     | Pick one unblocked work item, implement it, validate, record completion        |
-| `/audit`         | 3-phase spec-vs-code audit. Writes findings to working_tracks.md and review.md |
-| `/review-intake` | Process review.md items into working_tracks.md                                 |
+| `/spec-dd.implement`     | Pick one unblocked work item, implement it, validate, record completion        |
+| `/spec-dd.audit`         | 3-phase spec-vs-code audit. Writes findings to working_tracks.md and review.md |
+| `/spec-dd.review-intake` | Process review.md items into working_tracks.md                                 |
 
 ## working_tracks.md (Remaining Work)
 
@@ -37,7 +37,7 @@ tracks.md is the archive of completed work. It does NOT contain remaining items 
 
 ## review.md (Human Decisions)
 
-Ambiguous findings from audits that need human judgment. Items sit here until the human reviews them. On next loop start, `/review-intake` promotes remaining items to working_tracks.md (human deletes items they disagree with before restarting).
+Ambiguous findings from audits that need human judgment. Items sit here until the human reviews them. On next loop start, `/spec-dd.review-intake` promotes remaining items to working_tracks.md (human deletes items they disagree with before restarting).
 
 ## Build & Test
 

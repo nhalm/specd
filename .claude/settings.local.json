@@ -4,7 +4,11 @@
       "Bash(ls:*)",
       "Read(//private/tmp/spec-dd-test/**)",
       "Bash(printf 'TestProject\\\\nA test project\\\\n')",
-      "Bash(node /Users/nhalm/work/spec-dd-framework/bin/cli.js init)"
+      "Bash(node /Users/nhalm/work/spec-dd-framework/bin/cli.js init)",
+      "Read(//private/tmp/**)",
+      "Bash(rm -rf spec-dd-test)",
+      "Bash(mkdir spec-dd-test)",
+      "Bash(/Users/nhalm/work/spec-dd-framework/install.sh init /tmp/spec-dd-test)"
     ]
   }
 }
