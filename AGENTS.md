@@ -32,6 +32,7 @@ templates/        # Template files copied into target projects
 - **No runtime dependencies.** Only `node:fs`, `node:path`, and other Node built-ins. All external packages are devDependencies.
 - **Conventional commits** enforced by commitlint. Format: `type: description` (e.g., `feat:`, `fix:`, `chore:`, `refactor:`, `ci:`, `test:`).
 - **No AI attribution** in commits or PR descriptions. No "Co-Authored-By", "Generated with", or similar lines.
+- **PR titles** must be conventional commits (e.g., `feat: add X`). **PR bodies** must be plain prose describing what changed and why — no task lists, checkboxes, or "Test plan" sections. The PR body becomes the squash commit message.
 - **Prettier** for formatting (100-char width). **ESLint** flat config for linting.
 - Templates in `templates/` are excluded from lint and format — they are copied verbatim into user projects.
 
