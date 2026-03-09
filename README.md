@@ -2,7 +2,7 @@
 
 A framework for building software with AI agents using spec-driven development. You write specifications that define **what** to build and **why**. AI agents autonomously implement the code, audit it against the specs, and surface issues for your review.
 
-Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Requires Node.js for installation.
+Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
 ## What This Is
 
@@ -20,14 +20,15 @@ The specs are the source of truth. If code contradicts a spec, the code is wrong
 ## Prerequisites
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed and authenticated
-- Node.js (for `npx` installation)
 - [repomirror](https://www.npmjs.com/package/repomirror) (optional, for loop visualization)
 
 ## Install
 
+Clone this repo, then run the install script targeting your project:
+
 ```bash
-cd your-project
-npx spec-dd init
+git clone git@github.com:nhalm/spec-dd-framework.git
+./spec-dd-framework/install.sh init /path/to/your-project
 ```
 
 Prompts for your project name and description, then scaffolds the full framework into your repo. Works with new or existing projects.
@@ -77,7 +78,6 @@ Specs go through a lifecycle: **Draft** (being written) → **Ready** (complete,
 |------|---------|
 | `CLAUDE.md` | Entry point for Claude Code — points to AGENTS.md |
 | `AGENTS.md` | Agent behavior guidelines: spec authority, loop system, conventions |
-| `GUIDE.md` | Human-readable getting-started walkthrough |
 | `planning_prompt.md` | Prompt for collaborative spec-writing sessions (no code) |
 
 ## How the Loop Works
@@ -117,17 +117,22 @@ Each phase uses a different model — fast/cheap for review intake, balanced for
 
 ## Updating the Framework
 
+Pull the latest version of this repo and run update against your project:
+
 ```bash
-npx spec-dd update
+cd spec-dd-framework && git pull
+./install.sh update /path/to/your-project
 ```
 
 Overwrites framework-owned files (loop.sh, command prompts) without touching files you've customized (AGENTS.md, specs, tracks). If a framework version removes a file, update cleans it up automatically.
 
+To check your installation:
+
 ```bash
-npx spec-dd doctor
+./spec-dd-framework/install.sh doctor /path/to/your-project
 ```
 
-Validates your installation: checks all expected files exist, loop.sh is executable, and required tools are available.
+Validates all expected files exist, loop.sh is executable, and required tools are available.
 
 ## Writing Good Specs
 
