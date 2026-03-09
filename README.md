@@ -17,47 +17,37 @@ specd replaces that with a document-driven workflow:
 
 The specs are the source of truth. If code contradicts a spec, the code is wrong. Agents never change specs — only humans do.
 
+## Quickstart
+
+```bash
+cd your-project
+npx specd init
+```
+
+Prompts for your project name and description, then scaffolds the full framework into your repo. Works with new or existing projects.
+
+Then open Claude Code and run the setup command:
+
+```bash
+claude
+> /specd:setup
+```
+
+This analyzes your codebase and walks you through customizing AGENTS.md, validation steps, and writing your first spec.
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18+) with npm/npx
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed and authenticated
 
-## Install
+## What Gets Created
 
-Clone this repo, install dependencies, then run the CLI targeting your project:
-
-```bash
-git clone git@github.com:nhalm/specd.git
-cd specd && make install
-specd init /path/to/your-project
-```
-
-> `make install` runs `npm install` and `npm link`, making the `specd` command available globally.
-
-Prompts for your project name and description, then scaffolds the full framework into your repo. Works with new or existing projects.
-
-After init, verify these files were created in your project:
+After init, your project will have:
 
 - `AGENTS.md` — Agent guidelines (customize via `/specd:setup`)
 - `specs/README.md` — Spec index
 - `.claude/commands/specd/` — Slash commands
 - `working_tracks.md` — Work queue
-
-## Getting Started
-
-After installing, open Claude Code in your project and run the setup command:
-
-```bash
-cd your-project
-claude
-> /specd:setup
-```
-
-This analyzes your codebase and walks you through customizing:
-
-- **`AGENTS.md`** — Build commands, test runner, language conventions
-- **`.claude/commands/specd/implement.md`** — Validation steps (test suite, linter, type checker)
-- **First spec** — Helps you write your first spec based on what you want to build
 
 ## Usage
 
@@ -175,11 +165,8 @@ Each phase uses a different model — fast/cheap for review intake, balanced for
 
 ## Updating the Framework
 
-Pull the latest version of this repo and run update against your project:
-
 ```bash
-cd specd && git pull && make install
-specd update /path/to/your-project
+npx specd@latest update
 ```
 
 Overwrites framework-owned files (loop.sh, command prompts) without touching files you've customized (AGENTS.md, specs, tracks). If a framework version removes a file, update cleans it up automatically.
@@ -187,7 +174,7 @@ Overwrites framework-owned files (loop.sh, command prompts) without touching fil
 To check your installation:
 
 ```bash
-specd doctor /path/to/your-project
+npx specd doctor
 ```
 
 ## Writing Good Specs

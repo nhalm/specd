@@ -1,10 +1,28 @@
 {
   "name": "specd",
   "version": "0.1.0",
+  "description": "Spec-driven development framework for AI agents",
   "type": "module",
   "bin": {
     "specd": "./src/cli.js"
   },
+  "files": [
+    "src/",
+    "templates/"
+  ],
+  "keywords": [
+    "ai",
+    "agents",
+    "spec-driven",
+    "claude",
+    "development",
+    "framework"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nhalm/specd.git"
+  },
+  "license": "MIT",
   "scripts": {
     "lint": "eslint .",
     "fmt": "prettier --write .",
