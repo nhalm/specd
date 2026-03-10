@@ -40,7 +40,7 @@ The agent applies the "what counts as a finding" bar above. It does NOT write or
 When the agent returns findings, **you validate each one yourself**:
 
 1. Read the actual code for each finding — confirm or reject the claim against the source
-2. Cross-check against specd_work_list.md and specd_history.md to avoid duplicates (use targeted reads — grep for section headers, never read specd_history.md in full)
+2. Cross-check against specd_work_list.md and specd_history.md to avoid duplicates (grep for the spec name in specd_history.md — never read it in full)
 3. For each finding, answer: "Is the code actually broken or producing wrong results?" If no, reject the finding.
 4. Categorize each confirmed finding:
    - **Code is broken / produces wrong results** → specd_work_list.md item
