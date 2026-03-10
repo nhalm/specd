@@ -61,7 +61,7 @@ while [ $CYCLE -lt $MAX_CYCLES ]; do
 
     echo "=== Cycle ${CYCLE}/${MAX_CYCLES} ==="
 
-    # Step 1: Review intake — process review.md into working_tracks.md
+    # Step 1: Review intake — process specd_review.md into specd_work_list.md
     echo "=== Review intake ==="
     TIMESTAMP=$(date +%Y%m%d-%H%M%S)
     REVIEW_OUTPUT="/tmp/${PWD##*/}-review-${TIMESTAMP}.txt"
@@ -78,7 +78,7 @@ while [ $CYCLE -lt $MAX_CYCLES ]; do
         exit 1
     fi
 
-    # Step 2: Implement loop — work through working_tracks.md one item at a time
+    # Step 2: Implement loop — work through specd_work_list.md one item at a time
     while true; do
         TASK_NUM=$((TASK_NUM + 1))
         TIMESTAMP=$(date +%Y%m%d-%H%M%S)
@@ -145,5 +145,5 @@ while [ $CYCLE -lt $MAX_CYCLES ]; do
     sleep 2
 done
 
-echo "=== Cycle cap (${MAX_CYCLES}) reached — check working_tracks.md and review.md ==="
+echo "=== Cycle cap (${MAX_CYCLES}) reached — check specd_work_list.md and specd_review.md ==="
 exit 0
