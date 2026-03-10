@@ -44,9 +44,9 @@ describe("init", () => {
     expect(existsSync(join(tmp, "loop.sh"))).toBe(true);
     expect(existsSync(join(tmp, "specs/README.md"))).toBe(true);
     expect(existsSync(join(tmp, "specs/example-spec.md"))).toBe(true);
-    expect(existsSync(join(tmp, "tracks.md"))).toBe(true);
-    expect(existsSync(join(tmp, "review.md"))).toBe(true);
-    expect(existsSync(join(tmp, "working_tracks.md"))).toBe(true);
+    expect(existsSync(join(tmp, "specd_history.md"))).toBe(true);
+    expect(existsSync(join(tmp, "specd_review.md"))).toBe(true);
+    expect(existsSync(join(tmp, "specd_work_list.md"))).toBe(true);
     expect(existsSync(join(tmp, ".claude/commands/specd/implement.md"))).toBe(true);
     expect(existsSync(join(tmp, ".claude/commands/specd/audit.md"))).toBe(true);
     expect(existsSync(join(tmp, ".claude/commands/specd/full-audit.md"))).toBe(true);
@@ -69,9 +69,9 @@ describe("init", () => {
     expect(content).not.toContain("{PROJECT_NAME}");
   });
 
-  it("replaces {PROJECT_NAME} in tracks.md", () => {
+  it("replaces {PROJECT_NAME} in specd_history.md", () => {
     runInit(tmp);
-    const content = readFileSync(join(tmp, "tracks.md"), "utf-8");
+    const content = readFileSync(join(tmp, "specd_history.md"), "utf-8");
     expect(content).toContain("TestProject");
     expect(content).not.toContain("{PROJECT_NAME}");
   });
@@ -152,8 +152,8 @@ describe("update", () => {
     expect(readFileSync(agentsPath, "utf-8")).toContain("CUSTOM CONTENT");
   });
 
-  it("preserves content below --- in working_tracks.md", () => {
-    const wtPath = join(tmp, "working_tracks.md");
+  it("preserves content below --- in specd_work_list.md", () => {
+    const wtPath = join(tmp, "specd_work_list.md");
     const original = readFileSync(wtPath, "utf-8");
     writeFileSync(wtPath, original + "\n## My Custom Work Item\n- [ ] Do something\n");
     update(tmp, TEMPLATES_DIR);
@@ -162,19 +162,19 @@ describe("update", () => {
     expect(updated).toContain("---");
   });
 
-  it("skips working_tracks.md when no --- separator exists", () => {
-    writeFileSync(join(tmp, "working_tracks.md"), "No separator here");
+  it("skips specd_work_list.md when no --- separator exists", () => {
+    writeFileSync(join(tmp, "specd_work_list.md"), "No separator here");
     update(tmp, TEMPLATES_DIR);
-    expect(readFileSync(join(tmp, "working_tracks.md"), "utf-8")).toBe("No separator here");
+    expect(readFileSync(join(tmp, "specd_work_list.md"), "utf-8")).toBe("No separator here");
   });
 
   it("handles multiple --- separators correctly", () => {
     writeFileSync(
-      join(tmp, "working_tracks.md"),
+      join(tmp, "specd_work_list.md"),
       "# Working Tracks\n\n---\n\n## Section 1\n\n---\n\n## Section 2\n",
     );
     update(tmp, TEMPLATES_DIR);
-    const content = readFileSync(join(tmp, "working_tracks.md"), "utf-8");
+    const content = readFileSync(join(tmp, "specd_work_list.md"), "utf-8");
     expect(content).toContain("Section 1");
     expect(content).toContain("Section 2");
   });
@@ -193,30 +193,30 @@ describe("update", () => {
     expect(readFileSync(versionPath, "utf-8")).toBe("0.1.0");
   });
 
-  it("creates working_tracks.md if it doesn't exist", () => {
-    rmSync(join(tmp, "working_tracks.md"), { force: true });
+  it("creates specd_work_list.md if it doesn't exist", () => {
+    rmSync(join(tmp, "specd_work_list.md"), { force: true });
     update(tmp, TEMPLATES_DIR);
-    expect(existsSync(join(tmp, "working_tracks.md"))).toBe(true);
+    expect(existsSync(join(tmp, "specd_work_list.md"))).toBe(true);
   });
 
   it("creates missing scaffold files", () => {
-    rmSync(join(tmp, "review.md"), { force: true });
+    rmSync(join(tmp, "specd_review.md"), { force: true });
     update(tmp, TEMPLATES_DIR);
-    expect(existsSync(join(tmp, "review.md"))).toBe(true);
+    expect(existsSync(join(tmp, "specd_review.md"))).toBe(true);
   });
 
-  it("skips working_tracks.md with --- inside content but no separator line", () => {
-    writeFileSync(join(tmp, "working_tracks.md"), "some content with --- in the middle");
+  it("skips specd_work_list.md with --- inside content but no separator line", () => {
+    writeFileSync(join(tmp, "specd_work_list.md"), "some content with --- in the middle");
     update(tmp, TEMPLATES_DIR);
-    expect(readFileSync(join(tmp, "working_tracks.md"), "utf-8")).toBe(
+    expect(readFileSync(join(tmp, "specd_work_list.md"), "utf-8")).toBe(
       "some content with --- in the middle",
     );
   });
 
-  it("handles working_tracks.md ending with --- and no trailing newline", () => {
-    writeFileSync(join(tmp, "working_tracks.md"), "# Header\n\n---");
+  it("handles specd_work_list.md ending with --- and no trailing newline", () => {
+    writeFileSync(join(tmp, "specd_work_list.md"), "# Header\n\n---");
     update(tmp, TEMPLATES_DIR);
-    const content = readFileSync(join(tmp, "working_tracks.md"), "utf-8");
+    const content = readFileSync(join(tmp, "specd_work_list.md"), "utf-8");
     expect(content).toContain("---");
   });
 

@@ -17,12 +17,12 @@ export const SCAFFOLD = [
   "AGENTS.md",
   "specs/README.md",
   "specs/example-spec.md",
-  "tracks.md",
-  "review.md",
+  "specd_history.md",
+  "specd_review.md",
 ];
 
 /** Files where the header (up to first ---) is updated but content below is preserved */
-export const HEADER_UPDATABLE = ["working_tracks.md"];
+export const HEADER_UPDATABLE = ["specd_work_list.md"];
 
 /** Files removed in this version (cleanup from prior installs) */
 export const REMOVED = [
