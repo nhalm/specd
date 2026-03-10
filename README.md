@@ -1,5 +1,9 @@
 # specd
 
+[![CI](https://github.com/nhalm/specd/actions/workflows/test.yml/badge.svg)](https://github.com/nhalm/specd/actions/workflows/test.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/nhalm/specd)](https://github.com/nhalm/specd/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A framework for building software with AI agents using spec-driven development. You describe what you want to build, Claude writes the specifications, and agents autonomously decide how to implement it — then audit their own work against the specs.
 
 Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
