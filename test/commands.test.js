@@ -225,6 +225,42 @@ describe("update", () => {
     expect(result.updated).toBeGreaterThan(0);
     expect(result.deleted).toBe(0);
   });
+
+  it("migrates tracks.md to specd_history.md", () => {
+    rmSync(join(tmp, "specd_history.md"), { force: true });
+    writeFileSync(join(tmp, "tracks.md"), "# Old History\n- item one\n");
+    update(tmp, TEMPLATES_DIR);
+    expect(existsSync(join(tmp, "tracks.md"))).toBe(false);
+    expect(readFileSync(join(tmp, "specd_history.md"), "utf-8")).toContain("item one");
+  });
+
+  it("migrates working_tracks.md to specd_work_list.md with header update", () => {
+    rmSync(join(tmp, "specd_work_list.md"), { force: true });
+    writeFileSync(
+      join(tmp, "working_tracks.md"),
+      "# Old Header\n---\n\n## my-spec v0.1\n- do thing\n",
+    );
+    update(tmp, TEMPLATES_DIR);
+    expect(existsSync(join(tmp, "working_tracks.md"))).toBe(false);
+    const content = readFileSync(join(tmp, "specd_work_list.md"), "utf-8");
+    expect(content).toContain("do thing");
+    expect(content).toContain("---");
+  });
+
+  it("migrates review.md to specd_review.md", () => {
+    rmSync(join(tmp, "specd_review.md"), { force: true });
+    writeFileSync(join(tmp, "review.md"), "# Review\n## some-spec\nfinding here\n");
+    update(tmp, TEMPLATES_DIR);
+    expect(existsSync(join(tmp, "review.md"))).toBe(false);
+    expect(readFileSync(join(tmp, "specd_review.md"), "utf-8")).toContain("finding here");
+  });
+
+  it("skips migration when new file already exists", () => {
+    writeFileSync(join(tmp, "tracks.md"), "OLD CONTENT");
+    update(tmp, TEMPLATES_DIR);
+    expect(existsSync(join(tmp, "tracks.md"))).toBe(false);
+    expect(readFileSync(join(tmp, "specd_history.md"), "utf-8")).not.toContain("OLD CONTENT");
+  });
 });
 
 describe("doctor", () => {

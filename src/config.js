@@ -33,6 +33,16 @@ export const REMOVED = [
   ".claude/commands/review-intake.md",
   ".claude/commands/setup.md",
   "planning_prompt.md",
+  "tracks.md",
+  "working_tracks.md",
+  "review.md",
+];
+
+/** Old → new file renames. Applied during update before other steps. */
+export const MIGRATIONS = [
+  ["tracks.md", "specd_history.md"],
+  ["working_tracks.md", "specd_work_list.md"],
+  ["review.md", "specd_review.md"],
 ];
 
 /** All installable files */
