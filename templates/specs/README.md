@@ -38,7 +38,7 @@ Each spec has a Changelog section with human-readable summaries of what changed 
 
 ## Tracks (Done Log)
 
-[specd_history.md](../specd_history.md) is a record of completed work — what's been implemented, organized by spec and version. Loop agents write to it after completing a work item. It prevents duplicate work and shows progress.
+[specd_history.md](../specd_history.md) is a record of completed work in reverse chronological order (newest first). Loop agents add entries after completing a work item. It prevents duplicate work and shows progress.
 
 specd_history.md does NOT contain "Remaining" lists. [specd_work_list.md](../specd_work_list.md) is the source of truth for remaining work. An item is done when it's in specd_history.md.
 

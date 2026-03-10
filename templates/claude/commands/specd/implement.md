@@ -24,7 +24,7 @@ After implementing, VALIDATE before recording completion:
 
 After validation, update tracking files:
 
-1. Add a line at the TOP of specd_history.md (below the header comment) in the format: `- **spec-name v0.1 (YYYY-MM-DD):** description of what was done`
+1. Add a line at the TOP of specd_history.md (below the header comment) in the format: `- **spec-name v0.1 (YYYY-MM-DD):** work item text` (use the work item text from specd_work_list.md as the description)
 2. Remove the completed item from specd_work_list.md.
 3. Check specd_work_list.md for items with `(blocked: ...)` annotations that reference the work you just completed. If the blocker is resolved, remove the `(blocked: ...)` annotation.
    Output `TASK_COMPLETE: true` when done.
