@@ -36,6 +36,8 @@ export const REMOVED = [
   "tracks.md",
   "working_tracks.md",
   "review.md",
+  ".specd-version",
+  ".specd-checksums.json",
 ];
 
 /** Old → new file renames. Applied during update before other steps. */
