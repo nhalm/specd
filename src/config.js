@@ -3,12 +3,12 @@ export const VERSION = "0.1.0";
 /** Files that get overwritten on update */
 export const FRAMEWORK_OWNED = [
   "loop.sh",
-  ".claude/commands/spec-dd/implement.md",
-  ".claude/commands/spec-dd/audit.md",
-  ".claude/commands/spec-dd/full-audit.md",
-  ".claude/commands/spec-dd/review-intake.md",
-  ".claude/commands/spec-dd/setup.md",
-  ".claude/commands/spec-dd/plan.md",
+  ".claude/commands/specd/implement.md",
+  ".claude/commands/specd/audit.md",
+  ".claude/commands/specd/full-audit.md",
+  ".claude/commands/specd/review-intake.md",
+  ".claude/commands/specd/setup.md",
+  ".claude/commands/specd/plan.md",
 ];
 
 /** Files installed once, never overwritten */
@@ -33,12 +33,6 @@ export const REMOVED = [
   ".claude/commands/review-intake.md",
   ".claude/commands/setup.md",
   "planning_prompt.md",
-  ".claude/commands/spec-dd.implement.md",
-  ".claude/commands/spec-dd.audit.md",
-  ".claude/commands/spec-dd.full-audit.md",
-  ".claude/commands/spec-dd.review-intake.md",
-  ".claude/commands/spec-dd.setup.md",
-  ".claude/commands/spec-dd.plan.md",
 ];
 
 /** All installable files */

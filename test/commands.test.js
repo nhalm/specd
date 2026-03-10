@@ -18,7 +18,7 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const TEMPLATES_DIR = join(__dirname, "..", "templates");
 
 function makeTmp() {
-  return mkdtempSync(join(tmpdir(), "spec-dd-test-"));
+  return mkdtempSync(join(tmpdir(), "specd-test-"));
 }
 
 function runInit(dir, name = "TestProject", desc = "A test project") {
@@ -47,12 +47,12 @@ describe("init", () => {
     expect(existsSync(join(tmp, "tracks.md"))).toBe(true);
     expect(existsSync(join(tmp, "review.md"))).toBe(true);
     expect(existsSync(join(tmp, "working_tracks.md"))).toBe(true);
-    expect(existsSync(join(tmp, ".claude/commands/spec-dd/implement.md"))).toBe(true);
-    expect(existsSync(join(tmp, ".claude/commands/spec-dd/audit.md"))).toBe(true);
-    expect(existsSync(join(tmp, ".claude/commands/spec-dd/full-audit.md"))).toBe(true);
-    expect(existsSync(join(tmp, ".claude/commands/spec-dd/review-intake.md"))).toBe(true);
-    expect(existsSync(join(tmp, ".claude/commands/spec-dd/setup.md"))).toBe(true);
-    expect(existsSync(join(tmp, ".claude/commands/spec-dd/plan.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/specd/implement.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/specd/audit.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/specd/full-audit.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/specd/review-intake.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/specd/setup.md"))).toBe(true);
+    expect(existsSync(join(tmp, ".claude/commands/specd/plan.md"))).toBe(true);
   });
 
   it("replaces {PROJECT_NAME} in AGENTS.md", () => {
@@ -83,9 +83,9 @@ describe("init", () => {
     expect(content).not.toContain("{One-line project description}");
   });
 
-  it("creates .spec-dd-version with correct version", () => {
+  it("creates .specd-version with correct version", () => {
     runInit(tmp);
-    const version = readFileSync(join(tmp, ".spec-dd-version"), "utf-8");
+    const version = readFileSync(join(tmp, ".specd-version"), "utf-8");
     expect(version).toBe("0.1.0");
   });
 
@@ -185,8 +185,8 @@ describe("update", () => {
     expect(existsSync(join(tmp, "GUIDE.md"))).toBe(false);
   });
 
-  it("creates .spec-dd-version", () => {
-    const versionPath = join(tmp, ".spec-dd-version");
+  it("creates .specd-version", () => {
+    const versionPath = join(tmp, ".specd-version");
     rmSync(versionPath, { force: true });
     update(tmp, TEMPLATES_DIR);
     expect(existsSync(versionPath)).toBe(true);
@@ -259,9 +259,9 @@ describe("doctor", () => {
     expect(result.fail).toBeGreaterThan(0);
   });
 
-  it("detects missing .spec-dd-version", () => {
+  it("detects missing .specd-version", () => {
     runInit(tmp);
-    rmSync(join(tmp, ".spec-dd-version"));
+    rmSync(join(tmp, ".specd-version"));
     const result = doctor(tmp);
     expect(result.fail).toBeGreaterThan(0);
   });

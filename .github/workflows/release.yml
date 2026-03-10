@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - run: npm ci
+      - run: make lint
+      - run: make fmt
+      - run: make test
+
+      # TODO: add npm publish step once npm account is set up
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Find the previous tag
+          PREV_TAG=$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')
+          if [ -z "$PREV_TAG" ]; then
+            # First release — use all commits
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          # Generate changelog from conventional commits
+          {
+            echo 'changelog<<EOF'
+            git log "$RANGE" --pretty=format:"- %s (%h)" --no-merges | \
+              sed -E 's/^- (feat|fix|chore|refactor|ci|test|docs)(\(.+\))?:/- **\1\2:**/'
+            echo ''
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: |
+            ## What's Changed
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ---
+
+            ```bash
+            npx specd@${{ github.ref_name }} init
+            ```
+          generate_release_notes: false

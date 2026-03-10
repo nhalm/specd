@@ -14,7 +14,7 @@ Specs are **steering documents** — they define WHAT to build and WHY, not HOW 
 
 **Agents have autonomy** on implementation. The spec steers direction, the agent decides the code.
 
-**Status transitions.** Humans move specs from Draft → Ready. The `/spec-dd:audit` command manages Ready ↔ Implemented transitions — promoting clean specs to Implemented, demoting specs with new findings back to Ready.
+**Status transitions.** Humans move specs from Draft → Ready. The `/specd:audit` command manages Ready ↔ Implemented transitions — promoting clean specs to Implemented, demoting specs with new findings back to Ready.
 
 **Future items:** Items marked with `(future)` are for reference only. Do not implement them — they belong to a later phase or another spec.
 
@@ -34,7 +34,7 @@ Each spec has a Changelog section with human-readable summaries of what changed 
 - Added business user authentication alongside existing platform users
 ```
 
-**Work items** live in [working_tracks.md](../working_tracks.md), not in spec changelogs. The `/spec-dd:audit` command generates work items directly in working_tracks.md based on gaps between specs and code. Humans and planning agents can also write directly to working_tracks.md during spec phase.
+**Work items** live in [working_tracks.md](../working_tracks.md), not in spec changelogs. The `/specd:audit` command generates work items directly in working_tracks.md based on gaps between specs and code. Humans and planning agents can also write directly to working_tracks.md during spec phase.
 
 ## Tracks (Done Log)
 
