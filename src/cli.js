@@ -22,6 +22,7 @@ function usage() {
   console.log("");
   console.log("Options:");
   console.log("  --dry-run      Preview update changes without modifying files");
+  console.log("  --overwrite    Overwrite locally modified framework files during update");
   console.log("  --help, -h     Show this help message");
   console.log("  --version, -v  Show version number");
 }
@@ -91,8 +92,10 @@ async function main() {
         process.exit(1);
       }
 
-      const result = update(targetDir, TEMPLATES_DIR, { dryRun });
+      const overwrite = flags.includes("--overwrite");
+      const result = update(targetDir, TEMPLATES_DIR, { dryRun, overwrite });
       result.messages.forEach((m) => console.log(m));
+      if (result.conflicts.length > 0) process.exit(1);
       break;
     }
 
