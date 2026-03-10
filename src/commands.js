@@ -15,6 +15,7 @@ import {
   SCAFFOLD,
   HEADER_UPDATABLE,
   REMOVED,
+  MIGRATIONS,
   ALL_FILES,
   srcFor,
 } from "./config.js";
@@ -116,6 +117,20 @@ export function update(targetDir, templatesDir, { dryRun = false } = {}) {
   }
   messages.push(`Updating to: ${VERSION}`);
   messages.push("");
+
+  // Migrate renamed files (old → new) before other steps
+  for (const [oldName, newName] of MIGRATIONS) {
+    const oldPath = join(targetDir, oldName);
+    const newPath = join(targetDir, newName);
+    if (existsSync(oldPath) && !existsSync(newPath)) {
+      if (!dryRun) {
+        ensureDir(newPath);
+        writeFileSync(newPath, readFileSync(oldPath, "utf-8"));
+        unlinkSync(oldPath);
+      }
+      messages.push(`  ${pfx("RENAME")}  ${oldName} → ${newName}`);
+    }
+  }
 
   // Overwrite framework-owned files
   for (const dest of FRAMEWORK_OWNED) {

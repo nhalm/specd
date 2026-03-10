@@ -10,7 +10,7 @@ Specs are **steering documents** — they define WHAT to build and WHY, not HOW 
 
 1. **Spec phase** — We work through a spec until it's right
 2. **Loop phase** — `loop.sh` runs agents that implement the spec
-3. **Tracks** — [tracks.md](../tracks.md) records what's been implemented (done log)
+3. **Tracks** — [specd_history.md](../specd_history.md) records what's been implemented (done log)
 
 **Agents have autonomy** on implementation. The spec steers direction, the agent decides the code.
 
@@ -34,13 +34,13 @@ Each spec has a Changelog section with human-readable summaries of what changed 
 - Added business user authentication alongside existing platform users
 ```
 
-**Work items** live in [working_tracks.md](../working_tracks.md), not in spec changelogs. The `/specd:audit` command generates work items directly in working_tracks.md based on gaps between specs and code. Humans and planning agents can also write directly to working_tracks.md during spec phase.
+**Work items** live in [specd_work_list.md](../specd_work_list.md), not in spec changelogs. The `/specd:audit` command generates work items directly in specd_work_list.md based on gaps between specs and code. Humans and planning agents can also write directly to specd_work_list.md during spec phase.
 
 ## Tracks (Done Log)
 
-[tracks.md](../tracks.md) is a record of completed work — what's been implemented, organized by spec and version. Loop agents write to it after completing a work item. It prevents duplicate work and shows progress.
+[specd_history.md](../specd_history.md) is a record of completed work in reverse chronological order (newest first). Loop agents add entries after completing a work item. It prevents duplicate work and shows progress.
 
-tracks.md does NOT contain "Remaining" lists. [working_tracks.md](../working_tracks.md) is the source of truth for remaining work. An item is done when it's in tracks.md.
+specd_history.md does NOT contain "Remaining" lists. [specd_work_list.md](../specd_work_list.md) is the source of truth for remaining work. An item is done when it's in specd_history.md.
 
 ## Status Legend
 

@@ -40,12 +40,12 @@ The agent applies the "what counts as a finding" bar above. It does NOT write or
 When the agent returns findings, **you validate each one yourself**:
 
 1. Read the actual code for each finding — confirm or reject the claim against the source
-2. Cross-check against working_tracks.md and tracks.md to avoid duplicates (use targeted reads — grep for section headers, never read tracks.md in full)
+2. Cross-check against specd_work_list.md and specd_history.md to avoid duplicates (grep for the spec name in specd_history.md — never read it in full)
 3. For each finding, answer: "Is the code actually broken or producing wrong results?" If no, reject the finding.
 4. Categorize each confirmed finding:
-   - **Code is broken / produces wrong results** → working_tracks.md item
+   - **Code is broken / produces wrong results** → specd_work_list.md item
    - **Spec needs to prescribe new behavior** → spec update candidate (version bump required)
-   - **Ambiguous, needs human** → review.md item
+   - **Ambiguous, needs human** → specd_review.md item
    - **Already known / in progress / duplicate** → skip
    - **Code works fine, just different from spec wording** → skip (do NOT flag)
 
@@ -57,7 +57,7 @@ Write confirmed findings for this spec before moving to the next one.
 
 ## Writing findings
 
-### working_tracks.md
+### specd_work_list.md
 
 Add concrete, actionable work items under `## spec-name vX.Y` section headers. Each item must be a small, single unit of work. Add `(blocked: ...)` for items with dependencies.
 
@@ -68,9 +68,9 @@ When the spec needs to prescribe genuinely new or changed behavior (NOT document
 1. Update the spec body with the corrected content
 2. Bump the version (minor increment: v0.9 → v0.10)
 3. Add a changelog entry with human-readable summary
-4. Add corresponding work items to working_tracks.md under the new version
+4. Add corresponding work items to specd_work_list.md under the new version
 
-### review.md
+### specd_review.md
 
 For ambiguous findings where it's unclear whether code or spec is wrong:
 
@@ -89,16 +89,16 @@ For ambiguous findings where it's unclear whether code or spec is wrong:
 After processing each spec:
 
 - **Ready spec with NO findings** → Update status to "Implemented" in both the spec file and specs/README.md
-- **Ready spec with findings** → Status stays Ready (findings are in working_tracks.md)
+- **Ready spec with findings** → Status stays Ready (findings are in specd_work_list.md)
 
 ## Output
 
 After completing all specs, report a summary:
 
 - Number of findings per spec
-- Items added to working_tracks.md
-- Items added to review.md
+- Items added to specd_work_list.md
+- Items added to specd_review.md
 - Status transitions made
 
 Output `AUDIT_COMPLETE: true` when done.
-Output `AUDIT_CLEAN: true` if no new items were added to working_tracks.md (audit found nothing or only review.md items).
+Output `AUDIT_CLEAN: true` if no new items were added to specd_work_list.md (audit found nothing or only specd_review.md items).
