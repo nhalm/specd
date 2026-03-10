@@ -6,12 +6,10 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    environment: release
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,20 +19,13 @@ jobs:
         with:
           node-version: 18
           cache: npm
-          registry-url: https://registry.npmjs.org
 
       - run: npm ci
       - run: make lint
       - run: make fmt
       - run: make test
 
-      - name: Set version from tag
-        run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version
-
-      - name: Publish to npm
-        run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # TODO: add npm publish step once npm account is set up
 
       - name: Generate changelog
         id: changelog
