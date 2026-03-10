@@ -1,6 +1,6 @@
 # specd
 
-A framework for building software with AI agents using spec-driven development. You write specifications that define **what** to build and **why**. AI agents autonomously implement the code, audit it against the specs, and surface issues for your review.
+A framework for building software with AI agents using spec-driven development. You describe what you want to build, Claude writes the specifications, and agents autonomously decide how to implement it — then audit their own work against the specs.
 
 Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
@@ -10,7 +10,7 @@ Most AI coding workflows are conversational — you prompt, the agent codes, you
 
 specd replaces that with a document-driven workflow:
 
-1. **You write specs** — markdown documents that define behavior, contracts, and interfaces for each component
+1. **You describe what to build** — in a planning session with Claude, which writes the specs for you
 2. **Agents implement autonomously** — a loop picks work items one at a time, implements them, commits, and moves on
 3. **Agents audit their own work** — a separate audit phase compares code against specs and surfaces findings
 4. **You make the judgment calls** — ambiguous findings land in `review.md` for your decision before becoming work items
@@ -46,19 +46,42 @@ claude
 
 Setup analyzes your codebase and walks you through customizing `AGENTS.md` with your build commands and conventions, configuring the validation steps agents run after each implementation (tests, linting, type checking), and writing your first spec.
 
+### Installing from source
+
+If you prefer to install globally from source:
+
+```bash
+git clone git@github.com:nhalm/specd.git
+cd specd && make install
+```
+
+`make install` runs `npm install` and `npm link`, making the `specd` command available globally. Other make targets: `make check` (lint + format), `make test` (vitest), `make fix` (auto-fix).
+
+## How It Works In Practice
+
+The key idea: **specs define what to build, not how to build it.** You describe behavior, contracts, and interfaces. Agents decide the implementation — file structure, function names, patterns, everything. This is what makes autonomous implementation possible: the spec is a target to hit, not a script to follow.
+
+You don't write specs by hand. You talk to Claude:
+
+```
+> /specd:plan
+```
+
+Then describe what you want in plain language:
+
+- "I need a REST API for managing user accounts with email/password auth"
+- "Add a caching layer in front of the database queries — Redis-based, with TTL per entity type"
+- "The payment webhook handler is getting too complex, I want to refactor it into a state machine"
+
+Claude studies your codebase, asks clarifying questions about edge cases and design decisions, then writes the spec. You review it, push back on things that don't seem right, and iterate. The conversation is where the real design happens — the spec is just the artifact that captures it.
+
+A good spec says things like "authentication endpoint returns a JWT with user ID and role claims, tokens expire after 1 hour, refresh tokens expire after 30 days." It does **not** say "create a file called `auth.js` with a function called `generateToken`." The agent figures out the how.
+
 ## Workflow
 
-### 1. Write a spec
+### 1. Plan with Claude
 
-Specs live in `specs/` as markdown files. Each spec defines what a component does and why — not how to implement it. See `specs/example-spec.md` for the format.
-
-Use `/specd:plan` inside Claude Code for a collaborative session where you and Claude write and refine specs together. No code gets written in this mode — only markdown.
-
-Specs have a status in `specs/README.md`: **Draft** (being written), **Ready** (complete, agents can implement), or **Implemented** (code matches spec). When your spec is complete, change its status to Ready.
-
-### 2. Populate work items
-
-During `/specd:plan`, break the spec into small, concrete work items in `working_tracks.md`. Each item should be completable in a single agent iteration:
+Run `/specd:plan` and describe what you want built. Claude writes the spec and breaks it into work items in `working_tracks.md`:
 
 ```markdown
 ## my-feature v0.1
@@ -70,7 +93,9 @@ During `/specd:plan`, break the spec into small, concrete work items in `working
 
 Items marked `(blocked: reason)` are skipped until the blocker is resolved.
 
-### 3. Run the loop
+When the spec is ready, change its status to **Ready** in `specs/README.md`. This signals to agents that they can start implementing.
+
+### 2. Run the loop
 
 ```bash
 ./loop.sh
@@ -101,7 +126,7 @@ Flags:
 - `./loop.sh --skip-audit` — Implement only, no audit phase
 - `./loop.sh --full-audit` — Audit both Ready and Implemented specs (catches regressions)
 
-### 4. Review findings
+### 3. Review findings
 
 After the loop runs, check two files:
 
@@ -109,6 +134,12 @@ After the loop runs, check two files:
 - **`tracks.md`** — Completed work. Agents move items here after implementation. This is your done log.
 
 If new work items were generated, run the loop again. When the audit comes back clean and `working_tracks.md` is empty, your spec is implemented.
+
+### 4. Iterate
+
+Need to change something? Run `/specd:plan` again. Describe what's wrong or what you want different — Claude updates the spec, bumps the version, and generates new work items. Run the loop again.
+
+This is the cycle: **plan → loop → review → plan**. You steer with natural language, specs capture the decisions, agents do the implementation.
 
 ## Spec Lifecycle
 
@@ -135,7 +166,7 @@ cat .claude/commands/specd/plan.md | claude
 | Command                | Purpose                                                                                                                                                      |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `/specd:setup`         | Interactive onboarding. Customizes AGENTS.md, validation steps, and helps write your first spec. Run once after `specd init`.                                |
-| `/specd:plan`          | Collaborative spec-writing session. You and Claude work on specs together — no code, only markdown.                                                          |
+| `/specd:plan`          | Collaborative planning session. Describe what you want, Claude writes the spec and work items. The primary way to create and update specs.                   |
 | `/specd:implement`     | Picks one unblocked item from `working_tracks.md`, implements it, validates, commits, and moves it to `tracks.md`. The loop runs this repeatedly.            |
 | `/specd:audit`         | Audits Ready specs against code. Writes confirmed issues to `working_tracks.md`, ambiguous findings to `review.md`, and promotes clean specs to Implemented. |
 | `/specd:full-audit`    | Same as audit but also checks Implemented specs for regressions. Demotes specs with issues back to Ready.                                                    |
@@ -143,7 +174,7 @@ cat .claude/commands/specd/plan.md | claude
 
 ## Writing Good Specs
 
-A spec defines **what** a component does and **why**, not **how** to implement it. Include:
+Specs are written by `/specd:plan`, but it helps to know what makes a good one. A spec defines **what** a component does and **why**, not **how** to implement it:
 
 - **Overview** — What and why in 1-2 sentences
 - **Scope** — What it handles and what it explicitly doesn't
