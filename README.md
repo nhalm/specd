@@ -17,6 +17,18 @@ specd replaces that with a document-driven workflow:
 
 The specs are the source of truth. If code contradicts a spec, the code is wrong. Agents never change specs — only humans do.
 
+## Why Specs and Loops
+
+AI agents are good at writing code but bad at deciding what to write. Without a clear target, they drift — adding features you didn't ask for, making architectural decisions you'd disagree with, or solving the wrong problem entirely. The longer they run autonomously, the worse this gets.
+
+Specs solve the direction problem. A spec is a short document that pins down behavior, contracts, and interfaces for one component. It's specific enough that there's no ambiguity about what "done" looks like, but says nothing about implementation. The agent can't drift because the spec is the acceptance criteria — the audit phase checks code against it and flags anything that doesn't match.
+
+The loop solves the continuity problem. In a normal conversation, context resets every session. You re-explain what you're building, where you left off, what's already done. With a loop, the agent reads the work list, picks the next item, reads the relevant spec for full context, implements, validates, and records what it did. The next iteration picks up exactly where the last one left off — no context loss, no re-explaining.
+
+The review file (`specd_review.md`) solves the judgment problem. Not everything is black and white. When the audit finds a mismatch between spec and code but can't tell which one is wrong, it doesn't guess — it writes the finding to `specd_review.md` and moves on. You review these between loop runs: delete the ones you disagree with, leave the rest. On the next cycle, remaining items become work items. This is the human-in-the-loop — you're not reviewing every line of code, you're only making the calls that require human judgment.
+
+Together they create a feedback cycle: specs steer, agents implement, audits verify, and ambiguous findings route to you. Each loop cycle either makes progress or surfaces a decision. The system handles the straightforward work autonomously and escalates the rest.
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18+) with npm/npx
