@@ -98,11 +98,12 @@ export function init(targetDir, templatesDir, { projectName, description }) {
   return { copied, skipped, messages };
 }
 
-export function update(targetDir, templatesDir, { dryRun = false } = {}) {
+export function update(targetDir, templatesDir, { dryRun = false, overwrite = false } = {}) {
   let updated = 0;
   let skipped = 0;
   let deleted = 0;
   const messages = [];
+  const conflicts = [];
 
   const pfx = (label) => (dryRun ? `WOULD ${label}` : label);
 
@@ -143,18 +144,28 @@ export function update(targetDir, templatesDir, { dryRun = false } = {}) {
     }
 
     // Check for local modifications
-    if (existsSync(destPath) && storedChecksums[dest]) {
-      const currentChecksum = computeChecksum(destPath);
-      if (currentChecksum !== storedChecksums[dest]) {
-        messages.push(`  ${pfx("WARN")}  ${dest} (modified locally — overwriting)`);
-      }
+    const locallyModified =
+      existsSync(destPath) &&
+      storedChecksums[dest] &&
+      computeChecksum(destPath) !== storedChecksums[dest];
+
+    if (locallyModified && !overwrite) {
+      messages.push(`  CONFLICT  ${dest} (modified locally — use --overwrite to replace)`);
+      conflicts.push(dest);
+      skipped++;
+      continue;
+    }
+
+    if (locallyModified) {
+      messages.push(`  ${pfx("OVERWRITE")}  ${dest} (modified locally)`);
+    } else {
+      messages.push(`  ${pfx("UPDATE")}  ${dest}`);
     }
 
     if (!dryRun) {
       ensureDir(destPath);
       writeFileSync(destPath, readFileSync(srcPath, "utf-8"));
     }
-    messages.push(`  ${pfx("UPDATE")}  ${dest}`);
     updated++;
   }
 
@@ -253,13 +264,17 @@ export function update(targetDir, templatesDir, { dryRun = false } = {}) {
   }
 
   messages.push("");
-  if (dryRun) {
+  if (conflicts.length > 0) {
+    messages.push(
+      `Aborted. ${conflicts.length} file(s) modified locally. Review the changes above, then run with --overwrite to replace them.`,
+    );
+  } else if (dryRun) {
     messages.push("Dry run complete. No files were modified.");
   } else {
-    messages.push(`Done. ${updated} updated, ${skipped} skipped (scaffold), ${deleted} deleted.`);
+    messages.push(`Done. ${updated} updated, ${skipped} skipped, ${deleted} deleted.`);
   }
 
-  return { updated, skipped, deleted, messages };
+  return { updated, skipped, deleted, conflicts, messages };
 }
 
 export function doctor(targetDir) {

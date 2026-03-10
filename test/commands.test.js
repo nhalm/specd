@@ -137,11 +137,24 @@ describe("update", () => {
     rmSync(tmp, { recursive: true, force: true });
   });
 
-  it("overwrites framework-owned files", () => {
+  it("stops on locally modified framework files without --overwrite", () => {
     writeFileSync(join(tmp, "loop.sh"), "CORRUPTED");
-    update(tmp, TEMPLATES_DIR);
-    const content = readFileSync(join(tmp, "loop.sh"), "utf-8");
-    expect(content).not.toContain("CORRUPTED");
+    const result = update(tmp, TEMPLATES_DIR);
+    expect(result.conflicts).toContain("loop.sh");
+    expect(readFileSync(join(tmp, "loop.sh"), "utf-8")).toBe("CORRUPTED");
+  });
+
+  it("overwrites locally modified framework files with --overwrite", () => {
+    writeFileSync(join(tmp, "loop.sh"), "CORRUPTED");
+    const result = update(tmp, TEMPLATES_DIR, { overwrite: true });
+    expect(result.conflicts).toHaveLength(0);
+    expect(readFileSync(join(tmp, "loop.sh"), "utf-8")).not.toContain("CORRUPTED");
+  });
+
+  it("updates unmodified framework files without --overwrite", () => {
+    const result = update(tmp, TEMPLATES_DIR);
+    expect(result.conflicts).toHaveLength(0);
+    expect(result.updated).toBeGreaterThan(0);
   });
 
   it("skips scaffold files", () => {
