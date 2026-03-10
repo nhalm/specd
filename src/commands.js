@@ -20,24 +20,33 @@ import {
   srcFor,
 } from "./config.js";
 
+const SPECD_FILE = ".specd";
+
 function computeChecksum(filePath) {
   const content = readFileSync(filePath, "utf-8");
   return createHash("sha256").update(content).digest("hex");
 }
 
-function loadChecksums(targetDir) {
-  const checksumFile = join(targetDir, ".specd-checksums.json");
-  if (existsSync(checksumFile)) {
-    return JSON.parse(readFileSync(checksumFile, "utf-8"));
+function loadSpecdFile(targetDir) {
+  const filePath = join(targetDir, SPECD_FILE);
+  if (existsSync(filePath)) {
+    return JSON.parse(readFileSync(filePath, "utf-8"));
   }
-  return {};
+  // Migrate from old format
+  const data = { version: null, checksums: {} };
+  const oldVersion = join(targetDir, ".specd-version");
+  if (existsSync(oldVersion)) {
+    data.version = readFileSync(oldVersion, "utf-8").trim();
+  }
+  const oldChecksums = join(targetDir, ".specd-checksums.json");
+  if (existsSync(oldChecksums)) {
+    data.checksums = JSON.parse(readFileSync(oldChecksums, "utf-8"));
+  }
+  return data;
 }
 
-function saveChecksums(targetDir, checksums) {
-  writeFileSync(
-    join(targetDir, ".specd-checksums.json"),
-    JSON.stringify(checksums, null, 2) + "\n",
-  );
+function saveSpecdFile(targetDir, data) {
+  writeFileSync(join(targetDir, SPECD_FILE), JSON.stringify(data, null, 2) + "\n");
 }
 
 function readTemplate(templatesDir, dest) {
@@ -78,10 +87,7 @@ export function init(targetDir, templatesDir, { projectName, description }) {
     chmodSync(loopPath, 0o755);
   }
 
-  writeFileSync(join(targetDir, ".specd-version"), VERSION);
-  messages.push("  CREATE  .specd-version");
-
-  // Compute and save checksums for all created files
+  // Save .specd with version and checksums
   const checksums = {};
   for (const dest of ALL_FILES) {
     const destPath = join(targetDir, dest);
@@ -89,8 +95,8 @@ export function init(targetDir, templatesDir, { projectName, description }) {
       checksums[dest] = computeChecksum(destPath);
     }
   }
-  saveChecksums(targetDir, checksums);
-  messages.push("  CREATE  .specd-checksums.json");
+  saveSpecdFile(targetDir, { version: VERSION, checksums });
+  messages.push("  CREATE  .specd");
 
   messages.push("");
   messages.push(`Done. ${copied} files created, ${skipped} skipped.`);
@@ -107,14 +113,14 @@ export function update(targetDir, templatesDir, { dryRun = false, overwrite = fa
 
   const pfx = (label) => (dryRun ? `WOULD ${label}` : label);
 
-  const storedChecksums = loadChecksums(targetDir);
+  const specdData = loadSpecdFile(targetDir);
+  const storedChecksums = specdData.checksums;
   const newChecksums = { ...storedChecksums };
 
-  const versionFile = join(targetDir, ".specd-version");
-  if (existsSync(versionFile)) {
-    messages.push(`Current version: ${readFileSync(versionFile, "utf-8").trim()}`);
+  if (specdData.version) {
+    messages.push(`Current version: ${specdData.version}`);
   } else {
-    messages.push("No .specd-version found (first update).");
+    messages.push("No .specd found (first update).");
   }
   messages.push(`Updating to: ${VERSION}`);
   messages.push("");
@@ -243,13 +249,11 @@ export function update(targetDir, templatesDir, { dryRun = false, overwrite = fa
     }
   }
 
-  if (!dryRun) {
+  if (!dryRun && conflicts.length === 0) {
     const loopPath = join(targetDir, "loop.sh");
     if (existsSync(loopPath)) {
       chmodSync(loopPath, 0o755);
     }
-
-    writeFileSync(versionFile, VERSION);
 
     // Recompute and save checksums for all files
     for (const dest of ALL_FILES) {
@@ -260,7 +264,13 @@ export function update(targetDir, templatesDir, { dryRun = false, overwrite = fa
         delete newChecksums[dest];
       }
     }
-    saveChecksums(targetDir, newChecksums);
+    saveSpecdFile(targetDir, { version: VERSION, checksums: newChecksums });
+
+    // Clean up old format files
+    for (const old of [".specd-version", ".specd-checksums.json"]) {
+      const oldPath = join(targetDir, old);
+      if (existsSync(oldPath)) unlinkSync(oldPath);
+    }
   }
 
   messages.push("");
@@ -312,19 +322,19 @@ export function doctor(targetDir) {
     fail++;
   }
 
-  const versionFile = join(targetDir, ".specd-version");
-  if (existsSync(versionFile)) {
-    const projectVersion = readFileSync(versionFile, "utf-8").trim();
-    messages.push(`  PASS  .specd-version (${projectVersion})`);
+  const specdFile = join(targetDir, SPECD_FILE);
+  if (existsSync(specdFile)) {
+    const data = JSON.parse(readFileSync(specdFile, "utf-8"));
+    messages.push(`  PASS  .specd (${data.version})`);
     pass++;
-    if (projectVersion !== VERSION) {
+    if (data.version !== VERSION) {
       messages.push(
-        `  WARN  Version mismatch: project ${projectVersion}, framework ${VERSION} (run 'specd update')`,
+        `  WARN  Version mismatch: project ${data.version}, framework ${VERSION} (run 'specd update')`,
       );
       fail++;
     }
   } else {
-    messages.push("  FAIL  .specd-version exists");
+    messages.push("  FAIL  .specd exists");
     fail++;
   }
 

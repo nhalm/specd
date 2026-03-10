@@ -83,10 +83,12 @@ describe("init", () => {
     expect(content).not.toContain("{One-line project description}");
   });
 
-  it("creates .specd-version with correct version", () => {
+  it("creates .specd with correct version and checksums", () => {
     runInit(tmp);
-    const version = readFileSync(join(tmp, ".specd-version"), "utf-8");
-    expect(version).toBe("0.1.0");
+    const data = JSON.parse(readFileSync(join(tmp, ".specd"), "utf-8"));
+    expect(data.version).toBe("0.1.0");
+    expect(data.checksums).toBeDefined();
+    expect(Object.keys(data.checksums).length).toBeGreaterThan(0);
   });
 
   it("makes loop.sh executable", () => {
@@ -198,12 +200,12 @@ describe("update", () => {
     expect(existsSync(join(tmp, "GUIDE.md"))).toBe(false);
   });
 
-  it("creates .specd-version", () => {
-    const versionPath = join(tmp, ".specd-version");
-    rmSync(versionPath, { force: true });
+  it("writes .specd with updated version", () => {
+    rmSync(join(tmp, ".specd"), { force: true });
     update(tmp, TEMPLATES_DIR);
-    expect(existsSync(versionPath)).toBe(true);
-    expect(readFileSync(versionPath, "utf-8")).toBe("0.1.0");
+    expect(existsSync(join(tmp, ".specd"))).toBe(true);
+    const data = JSON.parse(readFileSync(join(tmp, ".specd"), "utf-8"));
+    expect(data.version).toBe("0.1.0");
   });
 
   it("creates specd_work_list.md if it doesn't exist", () => {
@@ -268,6 +270,18 @@ describe("update", () => {
     expect(readFileSync(join(tmp, "specd_review.md"), "utf-8")).toContain("finding here");
   });
 
+  it("migrates old .specd-version and .specd-checksums.json to .specd", () => {
+    // Simulate old format
+    const data = JSON.parse(readFileSync(join(tmp, ".specd"), "utf-8"));
+    rmSync(join(tmp, ".specd"));
+    writeFileSync(join(tmp, ".specd-version"), data.version);
+    writeFileSync(join(tmp, ".specd-checksums.json"), JSON.stringify(data.checksums, null, 2));
+    update(tmp, TEMPLATES_DIR);
+    expect(existsSync(join(tmp, ".specd"))).toBe(true);
+    expect(existsSync(join(tmp, ".specd-version"))).toBe(false);
+    expect(existsSync(join(tmp, ".specd-checksums.json"))).toBe(false);
+  });
+
   it("skips migration when new file already exists", () => {
     writeFileSync(join(tmp, "tracks.md"), "OLD CONTENT");
     update(tmp, TEMPLATES_DIR);
@@ -308,9 +322,9 @@ describe("doctor", () => {
     expect(result.fail).toBeGreaterThan(0);
   });
 
-  it("detects missing .specd-version", () => {
+  it("detects missing .specd", () => {
     runInit(tmp);
-    rmSync(join(tmp, ".specd-version"));
+    rmSync(join(tmp, ".specd"));
     const result = doctor(tmp);
     expect(result.fail).toBeGreaterThan(0);
   });
