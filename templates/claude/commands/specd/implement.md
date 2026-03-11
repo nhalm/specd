@@ -12,7 +12,6 @@ IMPORTANT:
 - Only implement specs with status "Ready"
 - NEVER change spec status in specs/README.md or individual spec files
 - If code contradicts the spec, fix the code first (see AGENTS.md)
-- Commit your changes
 - Do NOT use TodoWrite — just do the work
 - Do NOT do multiple things — ONE thing per iteration
 
@@ -27,6 +26,7 @@ After validation, update tracking files:
 1. Add a line at the TOP of specd_history.md (below the header comment) in the format: `- **spec-name v0.1 (YYYY-MM-DD):** work item text` (use the work item text from specd_work_list.md as the description)
 2. Remove the completed item from specd_work_list.md.
 3. Check specd_work_list.md for items with `(blocked: ...)` annotations that reference the work you just completed. If the blocker is resolved, remove the `(blocked: ...)` annotation.
+4. Commit ALL changes — code, tests, and tracking files (specd_work_list.md, specd_history.md) — in a single commit. Do not commit code separately from tracking updates.
    Output `TASK_COMPLETE: true` when done.
 
 Before declaring LOOP_COMPLETE, re-read specd_work_list.md and list every remaining
