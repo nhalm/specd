@@ -12,6 +12,14 @@ PROCESS:
 3. After all items are moved, clear the processed entries from specd_review.md.
 4. Output `REVIEW_INTAKE_COMPLETE: true` when done.
 
+DECISION LOGGING:
+
+Log every review outcome to `specd_decisions.jsonl` — prepend each as a single JSON line (newest first). Use `"source": "review-intake"`. For `decision_by`, use the human's name from `git config user.name` (the human made the call by keeping or deleting the item in specd_review.md).
+
+Decisions to log:
+- Promoting a finding to a work item (and the reasoning from the review entry)
+- Updating a spec based on a review finding
+
 RULES:
 
 - Each work item must be a small, single unit of work — one agent can complete it in one iteration

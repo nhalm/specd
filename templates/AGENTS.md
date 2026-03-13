@@ -19,6 +19,7 @@ The autonomous loop is defined in `loop.sh`. Commands live in `.claude/commands/
 | `/specd:implement`     | Pick one unblocked work item, implement it, validate, record completion        |
 | `/specd:audit`         | 3-phase spec-vs-code audit. Writes findings to specd_work_list.md and specd_review.md |
 | `/specd:review-intake` | Process specd_review.md items into specd_work_list.md                                 |
+| `/specd:full-audit`    | Like audit but covers Ready AND Implemented specs — demotes Implemented specs with findings |
 
 ## specd_work_list.md (Remaining Work)
 
@@ -35,6 +36,29 @@ Each entry is a single line: `- **spec-name v0.1 (YYYY-MM-DD):** description`. N
 ## specd_review.md (Human Decisions)
 
 Ambiguous findings from audits that need human judgment. Items sit here until the human reviews them. On next loop start, `/specd:review-intake` promotes remaining items to specd_work_list.md (human deletes items they disagree with before restarting).
+
+## specd_decisions.jsonl (Decision Log)
+
+Machine-readable log of decisions made during planning, audits, implementation, and review. One JSON object per line, newest first. **Never read in full** — use `Grep` or `jq` to query.
+
+Every significant decision must be logged: scoping choices, spec changes, audit judgments, review outcomes. Each entry records who decided (AI or human via git config), which command produced it, and which files are involved.
+
+Entry format:
+```json
+{"date_time":"2025-01-15T14:30:00Z","spec":"auth","version":"v0.1","source":"audit","decision_by":"claude","summary":"Kept argon2 over spec's bcrypt","reasoning":"argon2 is current best practice","files":{"specs":["specs/auth.md"],"source_code":["src/auth.js"],"other":["specd_work_list.md"]}}
+```
+
+Fields:
+- `date_time` — ISO 8601 UTC
+- `spec` — spec name (without path or extension)
+- `version` — spec version at time of decision, or `null` if not version-specific
+- `source` — command that produced it: `plan`, `audit`, `full-audit`, `review-intake`, `implement`
+- `decision_by` — `"claude"` for AI decisions, or the human's name from `git config user.name`
+- `summary` — one-line description of the decision
+- `reasoning` — why this decision was made
+- `files.specs` — spec files affected
+- `files.source_code` — source code files affected
+- `files.other` — other files affected (work list, history, etc.)
 
 ## Build & Test
 

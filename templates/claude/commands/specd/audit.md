@@ -91,6 +91,16 @@ After processing each spec:
 - **Ready spec with NO findings** → Update status to "Implemented" in both the spec file and specs/README.md
 - **Ready spec with findings** → Status stays Ready (findings are in specd_work_list.md)
 
+## Decision Logging
+
+Log every audit judgment to `specd_decisions.jsonl` — prepend each as a single JSON line (newest first). Use `"source": "audit"` and `"decision_by": "claude"`.
+
+Decisions to log:
+- Confirming or rejecting a research agent's finding (and why)
+- Choosing to update a spec vs filing a work item vs sending to review
+- Marking a spec as Implemented (no findings)
+- Any spec version bump (what changed and why)
+
 ## Output
 
 After completing all specs, report a summary:

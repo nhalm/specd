@@ -22,7 +22,9 @@ After implementing, VALIDATE before recording completion:
 - Run the project's test suite to catch errors
 - If there are linting or formatting errors fix them even if they aren't in a file you modified
 
-After validation, update tracking files:
+After validation, log any significant implementation decisions to `specd_decisions.jsonl` — prepend each as a single JSON line (newest first). Use `"source": "implement"` and `"decision_by": "claude"`. Log decisions like choosing one approach over another, discovering a spec gap, or deviating from an expected pattern.
+
+Update tracking files:
 
 1. Add a line at the TOP of specd_history.md (below the header comment) in the format: `- **spec-name v0.1 (YYYY-MM-DD):** work item text` (use the work item text from specd_work_list.md as the description)
 2. Remove the completed item from specd_work_list.md.
