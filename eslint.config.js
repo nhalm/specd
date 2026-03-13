@@ -23,6 +23,6 @@ export default [
     },
   },
   {
-    ignores: ["templates/**", "node_modules/**"],
+    ignores: ["templates/**", "evals/**", "node_modules/**"],
   },
 ];
