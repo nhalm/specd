@@ -101,6 +101,10 @@ Decisions to log:
 - Marking a spec as Implemented (no findings)
 - Any spec version bump (what changed and why)
 
+## Committing
+
+After writing findings for each spec, commit all changed files together in a single commit. This includes spec files, `specs/README.md`, `specd_work_list.md`, `specd_review.md`, and `specd_decisions.jsonl`. Do not leave audit changes uncommitted.
+
 ## Output
 
 After completing all specs, report a summary:

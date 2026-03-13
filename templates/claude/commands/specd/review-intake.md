@@ -20,6 +20,10 @@ Decisions to log:
 - Promoting a finding to a work item (and the reasoning from the review entry)
 - Updating a spec based on a review finding
 
+COMMITTING:
+
+After processing all findings, commit all changed files together in a single commit. This includes spec files, `specs/README.md`, `specd_work_list.md`, `specd_review.md`, and `specd_decisions.jsonl`. Do not leave changes uncommitted.
+
 RULES:
 
 - Each work item must be a small, single unit of work — one agent can complete it in one iteration
