@@ -51,6 +51,7 @@ This prompts for your project name and description, then creates the following i
 - `specs/` — Spec directory with an annotated example
 - `.claude/commands/specd/` — Slash commands for the autonomous loop
 - `specd_work_list.md`, `specd_history.md`, `specd_review.md` — Work tracking files
+- `specd_decisions.jsonl` — Decision log (AI records reasoning as it works)
 - `loop.sh` — The autonomous implementation loop
 
 Next, open Claude Code and run the interactive setup:
@@ -163,9 +164,11 @@ specd uses three files to track work. You'll see them referenced throughout the 
 
 **`specd_work_list.md`** is the todo list. Every remaining work item lives here — spec implementations, audit findings, and promoted review items. Agents read this at the start of each iteration to pick the next task. When an item is done, the agent moves it to `specd_history.md`. This file is intentionally kept small so agents can read it in full.
 
-**`specd_history.md`** is the done log. Completed work items are archived here, organized by spec and version. It grows over time and can get large — agents never read it in full, only grep for specific sections. Its purpose is preventing duplicate work and showing progress.
+**`specd_history.md`** is the done log. Completed work items are archived here in reverse chronological order (newest first). It grows over time and can get large — agents never read it in full, only grep for specific sections. Its purpose is preventing duplicate work and showing progress.
 
 **`specd_review.md`** is the human decision queue. When the audit finds something ambiguous — it's not sure if the code or the spec is wrong — it writes the finding here instead of creating a work item. You review these between loop runs: delete findings you disagree with, leave the rest. On the next cycle, `/specd:review-intake` converts remaining items into work items in `specd_work_list.md`.
+
+**`specd_decisions.jsonl`** is the decision log. As agents work, they record reasoning here — scoping choices during planning, audit judgments, version bumps, and other decisions that shaped the outcome. Each line is a JSON object with timestamp, source command, and rationale. This gives you a trail of why things were done, not just what was done.
 
 ## Spec Lifecycle
 
