@@ -1,4 +1,29 @@
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+function loadEnv() {
+  try {
+    const envPath = resolve(__dirname, "..", ".env");
+    const contents = readFileSync(envPath, "utf-8");
+    const vars = {};
+    for (const line of contents.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      vars[trimmed.slice(0, eq)] = trimmed.slice(eq + 1);
+    }
+    return vars;
+  } catch {
+    return {};
+  }
+}
+
+const envVars = loadEnv();
 
 export default class ClaudeCliProvider {
   constructor(options) {
@@ -24,6 +49,7 @@ export default class ClaudeCliProvider {
       encoding: "utf-8",
       env: {
         ...process.env,
+        ...envVars,
         CLAUDECODE: "",
       },
     });

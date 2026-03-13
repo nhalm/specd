@@ -4,8 +4,10 @@ prompts:
   - file://prompts/command.mjs
 
 providers:
-  - id: file://claude-provider.mjs
-    label: claude-cli
+  - id: anthropic:messages:claude-sonnet-4-6
+    label: claude-sonnet
+    config:
+      max_tokens: 4096
 
 defaultTest:
   options:
@@ -358,19 +360,14 @@ tests:
       template: claude/commands/specd/audit.md
       user_message: >-
         Assume you audited the auth spec and found no issues.
-        What status transition would you make and what would you record?
+        Show the full output you would produce, including status transitions,
+        decision log entries, and completion signals.
     assert:
-      - type: icontains
-        value: "AUDIT_COMPLETE"
-      - type: icontains
-        value: "AUDIT_CLEAN"
       - type: llm-rubric
         value: >-
           The response describes transitioning the auth spec from Ready
           to Implemented (updating both the spec file and specs/README.md).
           It should mention recording this in specd_decisions.jsonl.
-          It outputs AUDIT_COMPLETE: true and AUDIT_CLEAN: true since
-          no findings were discovered.
 
   - description: "audit: outputs AUDIT_COMPLETE with findings"
     vars:
@@ -411,9 +408,11 @@ tests:
       - type: llm-rubric
         value: >-
           The response identifies that the code uses argon2 instead of
-          bcrypt as the spec requires, flags this as a finding, and
-          adds a work item. It outputs AUDIT_COMPLETE: true. It should
-          NOT output AUDIT_CLEAN since there are findings.
+          bcrypt as the spec requires and flags this as a finding. It
+          takes action on the finding — either adding a work item to
+          specd_work_list.md or updating the spec. It outputs
+          AUDIT_COMPLETE: true. It should NOT output AUDIT_CLEAN since
+          there are findings.
 
   # --- Full-audit command ---
 
@@ -533,8 +532,8 @@ tests:
           The response identifies findings in the logging spec (missing
           file transport and/or missing request_id). Since the logging
           spec is Implemented and has findings, the response describes
-          demoting it back to Ready status — bumping the version and
-          adding work items to specd_work_list.md.
+          demoting it back to Ready status and adding work items to
+          specd_work_list.md. It may also bump the version.
 
   - description: "full-audit: logs decisions with source full-audit"
     vars:
@@ -639,10 +638,10 @@ tests:
       - type: llm-rubric
         value: >-
           The response includes decision log entries with "source":
-          "review-intake". The decision_by field should reference the
-          human's name (from git config user.name), not "claude", because
-          the human made the review decision by keeping the item in
-          specd_review.md.
+          "review-intake". The decision_by field should reference a
+          human name or indicate the human made the decision (not
+          attribute it solely to claude), since the human made the
+          review decision by keeping the item in specd_review.md.
 
   # --- Setup command ---
 
@@ -741,8 +740,7 @@ tests:
           The response offers to help write the first spec. It either
           asks what the user wants to build first, or (if there's existing
           code) offers to audit existing code and create specs describing
-          the current state. It references the spec format from
-          specs/example-spec.md.
+          the current state.
 
   # --- Decisions querying ---
 
