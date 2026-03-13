@@ -13,7 +13,7 @@
 2. **Write the spec** — Create or update the spec in `specs/`. Follow the format in `specs/example-spec.md`. Specs define WHAT and WHY, not HOW. New specs start at v0.1 with status Draft.
 3. **Write work items as you go** — As each spec section solidifies, IMMEDIATELY write corresponding work items to `specd_work_list.md` under a `## spec-name vX.Y` section header. Do not wait for the user to ask — this is not optional. The work list is the primary deliverable of planning. If you finish a planning session without writing work items, you have failed.
 4. **Update specs/README.md** — Add or update the spec entry in the index table with the correct version and status.
-5. **Remind the user** — The spec starts as Draft. When the user is satisfied, they change the status to Ready in both the spec file and each specs/README.md up the tree. The loop only implements Ready specs.
+5. **Remind the user** — The spec starts as Draft. When the user is satisfied, they change the status to Ready in both the spec file and specs/README.md. The loop only implements Ready specs.
 
 When **updating** an existing spec, always review the work items in specd_work_list.md for that spec. Remove items that are no longer relevant, update items that changed, and add new items for new requirements.
 
@@ -70,6 +70,7 @@ Decisions include:
 - Scoping something in or out
 - Picking one approach over another
 - Deferring something to a later phase
+
 
 ## Spec-vs-Code Analysis
 
