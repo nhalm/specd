@@ -132,6 +132,15 @@ ${vars.decisions_override || ""}
     }
   }
 
+  // Add environment variables
+  if (vars.env_vars) {
+    context += `\n\n<environment>`;
+    for (const [key, value] of Object.entries(vars.env_vars)) {
+      context += `\n${key}=${value}`;
+    }
+    context += `\n</environment>`;
+  }
+
   return context;
 }
 

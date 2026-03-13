@@ -103,7 +103,10 @@ Decisions to log:
 
 ## Committing
 
-After writing findings for each spec, commit all changed files together in a single commit. This includes spec files, `specs/README.md`, `specd_work_list.md`, `specd_review.md`, and `specd_decisions.jsonl`. Do not leave audit changes uncommitted.
+After writing findings for each spec, commit all changed files together in a single commit. This includes spec files, `specs/README.md`, `specd_work_list.md`, `specd_review.md`, and `specd_decisions.jsonl`.
+
+- If the environment variable `SPECD_LOOP` is set, commit automatically.
+- Otherwise, present a summary of changes and ask the user for confirmation before committing.
 
 ## Output
 

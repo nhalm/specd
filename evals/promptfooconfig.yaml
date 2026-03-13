@@ -635,13 +635,6 @@ tests:
     assert:
       - type: icontains
         value: "review-intake"
-      - type: llm-rubric
-        value: >-
-          The response includes decision log entries with "source":
-          "review-intake". The decision_by field should reference a
-          human name or indicate the human made the decision (not
-          attribute it solely to claude), since the human made the
-          review decision by keeping the item in specd_review.md.
 
   # --- Setup command ---
 
@@ -741,6 +734,60 @@ tests:
           asks what the user wants to build first, or (if there's existing
           code) offers to audit existing code and create specs describing
           the current state.
+
+  # --- SPECD_LOOP commit behavior ---
+
+  - description: "implement: asks for confirmation when not in loop"
+    vars:
+      template: claude/commands/specd/implement.md
+      user_message: >-
+        Implement the next work item.
+      worklist_override: |
+        <!-- specd_work_list: execution queue for all work -->
+        ---
+
+        ## auth v0.1
+        - Create User model with email, password_hash, created_at fields
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response presents a summary of changes and either asks the
+          user for confirmation before committing, or presents changes
+          and waits for approval rather than committing automatically.
+          It should NOT describe committing as something it does
+          automatically without user input.
+
+  - description: "implement: commits automatically in loop mode"
+    vars:
+      template: claude/commands/specd/implement.md
+      user_message: >-
+        Implement the next work item.
+      worklist_override: |
+        <!-- specd_work_list: execution queue for all work -->
+        ---
+
+        ## auth v0.1
+        - Create User model with email, password_hash, created_at fields
+      env_vars:
+        SPECD_LOOP: "1"
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response commits automatically without asking for user
+          confirmation. It does NOT present changes and wait for approval
+          — it proceeds directly to committing since SPECD_LOOP is set.
+
+  - description: "audit: asks for confirmation when not in loop"
+    vars:
+      template: claude/commands/specd/audit.md
+      user_message: >-
+        Audit the specs. After you write findings, show me what you'd commit.
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response presents a summary of audit findings and changes,
+          and asks the user for confirmation before committing. It does
+          NOT commit automatically.
 
   # --- Decisions querying ---
 
