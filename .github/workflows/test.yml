@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      - run: npm install
       - run: make lint
       - run: make fmt
       - run: make test
