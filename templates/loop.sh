@@ -2,6 +2,9 @@
 
 cd "$(dirname "$0")"
 
+# Signal to command templates that we're in an automated loop
+export SPECD_LOOP=1
+
 # Defaults
 MAX_CYCLES=5
 CYCLE=0

@@ -139,17 +139,13 @@ export function update(targetDir, templatesDir, { dryRun = false, overwrite = fa
     }
   }
 
-  // Overwrite framework-owned files
+  // Pass 1: scan all framework-owned files for conflicts before writing anything
   for (const dest of FRAMEWORK_OWNED) {
     const srcPath = join(templatesDir, srcFor(dest));
     const destPath = join(targetDir, dest);
 
-    if (!existsSync(srcPath)) {
-      messages.push(`  MISSING  ${dest} (template not found)`);
-      continue;
-    }
+    if (!existsSync(srcPath)) continue;
 
-    // Check for local modifications
     const locallyModified =
       existsSync(destPath) &&
       storedChecksums[dest] &&
@@ -159,20 +155,37 @@ export function update(targetDir, templatesDir, { dryRun = false, overwrite = fa
       messages.push(`  CONFLICT  ${dest} (modified locally — use --overwrite to replace)`);
       conflicts.push(dest);
       skipped++;
-      continue;
     }
+  }
 
-    if (locallyModified) {
-      messages.push(`  ${pfx("OVERWRITE")}  ${dest} (modified locally)`);
-    } else {
-      messages.push(`  ${pfx("UPDATE")}  ${dest}`);
-    }
+  // Pass 2: only write framework-owned files if no conflicts were found
+  if (conflicts.length === 0) {
+    for (const dest of FRAMEWORK_OWNED) {
+      const srcPath = join(templatesDir, srcFor(dest));
+      const destPath = join(targetDir, dest);
 
-    if (!dryRun) {
-      ensureDir(destPath);
-      writeFileSync(destPath, readFileSync(srcPath, "utf-8"));
+      if (!existsSync(srcPath)) {
+        messages.push(`  MISSING  ${dest} (template not found)`);
+        continue;
+      }
+
+      const locallyModified =
+        existsSync(destPath) &&
+        storedChecksums[dest] &&
+        computeChecksum(destPath) !== storedChecksums[dest];
+
+      if (locallyModified) {
+        messages.push(`  ${pfx("OVERWRITE")}  ${dest} (modified locally)`);
+      } else {
+        messages.push(`  ${pfx("UPDATE")}  ${dest}`);
+      }
+
+      if (!dryRun) {
+        ensureDir(destPath);
+        writeFileSync(destPath, readFileSync(srcPath, "utf-8"));
+      }
+      updated++;
     }
-    updated++;
   }
 
   // Scaffold files: create if missing, skip if exists

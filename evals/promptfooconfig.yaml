@@ -1,0 +1,813 @@
+description: "specd prompt template behavioral tests"
+
+prompts:
+  - file://prompts/command.mjs
+
+providers:
+  - id: anthropic:messages:claude-sonnet-4-6
+    label: claude-sonnet
+    config:
+      max_tokens: 4096
+
+defaultTest:
+  options:
+    transformVars: file://load-templates.mjs
+    provider: anthropic:messages:claude-sonnet-4-6
+
+tests:
+  # --- Plan command ---
+
+  - description: "plan: discusses before writing for a specific request"
+    vars:
+      template: claude/commands/specd/plan.md
+      user_message: >-
+        I want to add rate limiting to the auth endpoints.
+        Limit login to 5 attempts per minute per IP. Return 429 when exceeded.
+    assert:
+      - type: contains
+        value: "?"
+      - type: not-icontains
+        value: "```js"
+      - type: not-icontains
+        value: "```typescript"
+      - type: llm-rubric
+        value: >-
+          The response either asks clarifying questions to refine the
+          requirement, or begins drafting a spec. It does not jump straight
+          to writing implementation code.
+
+  - description: "plan: asks clarifying questions for vague input"
+    vars:
+      template: claude/commands/specd/plan.md
+      user_message: "Add caching to the app"
+    assert:
+      - type: contains
+        value: "?"
+      - type: llm-rubric
+        value: >-
+          The response asks clarifying questions about scope, requirements,
+          or design decisions rather than immediately writing a spec.
+
+  - description: "plan: no implementation code in planning"
+    vars:
+      template: claude/commands/specd/plan.md
+      user_message: "Plan a WebSocket notification system for real-time updates"
+    assert:
+      - type: not-regex
+        value: "```(?!markdown|\\n)[a-z]"
+      - type: llm-rubric
+        value: >-
+          The response is planning-oriented: it asks clarifying questions,
+          discusses scope, or drafts spec content. It does not contain
+          implementation code or technical how-to instructions.
+
+  - description: "plan: produces well-sized work items"
+    vars:
+      template: claude/commands/specd/plan.md
+      conversation:
+        - role: User
+          content: "I want to add rate limiting to the login endpoint"
+        - role: Assistant
+          content: >-
+            A few questions: 1) Just login or register too?
+            2) In-memory or Redis? 3) What limit? 4) Sliding or fixed window?
+            5) Should successful login reset the counter?
+        - role: User
+          content: >-
+            Just login, not register. Redis — we run multiple nodes.
+            5 per minute per IP, sliding window. Success does not reset.
+            Return 429 with retry_after. New spec, not part of auth.
+        - role: Assistant
+          content: "Got it. I'll create specs/rate-limiting.md and the work items."
+      user_message: "Go ahead."
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response includes work items (bulleted list of tasks for
+          specd_work_list.md). Each work item must be:
+          1. A single concrete task targeting a specific function, endpoint, or component
+          2. Small enough to complete in one agent session (not a broad category like "implement rate limiting")
+          3. Have a clear done state
+          Work items should form logical steps that build on each other,
+          with blocked/dependency annotations where appropriate.
+
+  - description: "plan: logs decisions to specd_decisions.jsonl"
+    vars:
+      template: claude/commands/specd/plan.md
+      conversation:
+        - role: User
+          content: "Add rate limiting to login"
+        - role: Assistant
+          content: "Should I scope this to just login? In-memory or Redis? New spec or extend auth?"
+        - role: User
+          content: "Just login. In-memory, we're single instance. New spec."
+        - role: Assistant
+          content: "Got it. Writing the spec now."
+      user_message: "Go ahead, and make sure you log the decisions."
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response mentions logging decisions to specd_decisions.jsonl,
+          or shows decision entries that would be written there. Decisions
+          should include scoping choices (login only, not register),
+          infrastructure choices (in-memory, not Redis), and the choice
+          to create a new spec vs extending auth.
+
+  # --- Implement command ---
+
+  - description: "implement: identifies the correct unblocked work item"
+    vars:
+      template: claude/commands/specd/implement.md
+      user_message: >-
+        Here is the current state. Which work item should be implemented next
+        and why? Do not actually implement it, just identify it.
+      worklist_override: |
+        <!-- specd_work_list: execution queue for all work -->
+        ---
+
+        ## auth v0.1
+        - Create User model with email, password_hash, created_at fields
+        - Add POST /auth/register endpoint (blocked: Create User model)
+        - Add POST /auth/login endpoint (blocked: Create User model)
+    assert:
+      - type: icontains
+        value: "User model"
+      - type: llm-rubric
+        value: >-
+          The response identifies "Create User model" as the item to
+          implement because it is the only unblocked item. It recognizes
+          that the register and login endpoints are blocked on it.
+
+  - description: "implement: outputs TASK_COMPLETE after finishing a work item"
+    vars:
+      template: claude/commands/specd/implement.md
+      user_message: >-
+        Assume you just implemented and validated the User model work item.
+        Show the tracking updates you would make and the completion signal.
+      worklist_override: |
+        <!-- specd_work_list: execution queue for all work -->
+        ---
+
+        ## auth v0.1
+        - Create User model with email, password_hash, created_at fields
+        - Add POST /auth/register endpoint (blocked: Create User model)
+        - Add POST /auth/login endpoint (blocked: Create User model)
+    assert:
+      - type: icontains
+        value: "TASK_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response describes updating specd_work_list.md and
+          specd_history.md, then outputs the TASK_COMPLETE: true signal.
+
+  - description: "implement: outputs LOOP_COMPLETE when all items are blocked"
+    vars:
+      template: claude/commands/specd/implement.md
+      user_message: >-
+        Here is the current state. What should you do?
+      worklist_override: |
+        <!-- specd_work_list: execution queue for all work -->
+        ---
+
+        ## auth v0.1
+        - Add POST /auth/register endpoint (blocked: external auth service integration)
+        - Add POST /auth/login endpoint (blocked: external auth service integration)
+    assert:
+      - type: icontains
+        value: "LOOP_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response recognizes that all remaining work items are blocked
+          and outputs the LOOP_COMPLETE: true signal. It does not attempt
+          to implement a blocked item.
+
+  - description: "implement: mentions updating tracking files in same commit"
+    vars:
+      template: claude/commands/specd/implement.md
+      user_message: >-
+        I just finished implementing the User model. Walk me through
+        what tracking updates need to happen and how they should be committed.
+      worklist_override: |
+        <!-- specd_work_list: execution queue for all work -->
+        ---
+
+        ## auth v0.1
+        - Create User model with email, password_hash, created_at fields
+        - Add POST /auth/register endpoint (blocked: Create User model)
+        - Add POST /auth/login endpoint (blocked: Create User model)
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response describes updating specd_work_list.md (removing
+          the completed item and unblocking dependent items) and
+          specd_history.md (adding the completion entry). These tracking
+          updates should be committed together with the implementation work.
+
+  - description: "implement: logs decisions to specd_decisions.jsonl"
+    vars:
+      template: claude/commands/specd/implement.md
+      user_message: >-
+        Here is the current state. Which work item should be implemented next?
+        Walk through your approach including any decisions you'd log.
+      worklist_override: |
+        <!-- specd_work_list: execution queue for all work -->
+        ---
+
+        ## auth v0.1
+        - Create User model with email, password_hash, created_at fields
+        - Add POST /auth/register endpoint (blocked: Create User model)
+        - Add POST /auth/login endpoint (blocked: Create User model)
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response describes implementation decisions that should
+          be recorded — such as approach choices, spec interpretations,
+          or deviations. It may reference specd_decisions.jsonl by name,
+          show decision entries, or describe decisions in a table or list.
+
+  # --- Audit command ---
+
+  - description: "audit: only audits Ready specs"
+    vars:
+      template: claude/commands/specd/audit.md
+      user_message: "Audit the specs."
+      extra_specs:
+        - path: specs/logging.md
+          content: |
+            # Logging Spec
+
+            | Field | Value |
+            | ----- | ----- |
+            | Version | v0.1 |
+            | Status | Draft |
+
+            ## Overview
+            Structured logging throughout the app.
+        - path: specs/README.md
+          content: |
+            # Specs
+
+            | Spec | Version | Status |
+            | ---- | ------- | ------ |
+            | [auth](auth.md) | v0.1 | Ready |
+            | [logging](logging.md) | v0.1 | Draft |
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const express = require('express');
+            const bcrypt = require('bcrypt');
+            const jwt = require('jsonwebtoken');
+            const router = express.Router();
+
+            // POST /auth/register
+            router.post('/register', async (req, res) => {
+              const { email, password } = req.body;
+              if (!email || !email.includes('@')) return res.status(400).json({ error: 'Invalid email' });
+              const password_hash = await bcrypt.hash(password, 10);
+              const user = await db.users.create({ email, password_hash });
+              return res.status(201).json({ id: user.id });
+            });
+
+            // POST /auth/login
+            router.post('/login', async (req, res) => {
+              const { email, password } = req.body;
+              const user = await db.users.findByEmail(email);
+              if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+              }
+              const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+              return res.status(200).json({ token });
+            });
+
+            // Auth middleware
+            function authMiddleware(req, res, next) {
+              const header = req.headers.authorization;
+              if (!header) return res.status(401).json({ error: 'Missing token' });
+              const token = header.replace('Bearer ', '');
+              try {
+                req.user = jwt.verify(token, process.env.JWT_SECRET);
+                next();
+              } catch (e) {
+                return res.status(401).json({ error: 'Invalid token' });
+              }
+            }
+
+            module.exports = { router, authMiddleware };
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response only audits the auth spec (status Ready) and
+          explicitly skips or ignores the logging spec (status Draft).
+          It does not treat Draft specs as in-scope.
+
+  - description: "audit: logs decisions and spec changes to specd_decisions.jsonl"
+    vars:
+      template: claude/commands/specd/audit.md
+      user_message: >-
+        Audit the specs. For each finding or judgment you make,
+        show what you would write to specd_decisions.jsonl.
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const express = require('express');
+            const bcrypt = require('bcrypt');
+            const jwt = require('jsonwebtoken');
+            const router = express.Router();
+
+            router.post('/register', async (req, res) => {
+              const { email, password } = req.body;
+              if (!email || !email.includes('@')) return res.status(400).json({ error: 'Invalid email' });
+              const password_hash = await bcrypt.hash(password, 10);
+              const user = await db.users.create({ email, password_hash });
+              return res.status(201).json({ id: user.id });
+            });
+
+            router.post('/login', async (req, res) => {
+              const { email, password } = req.body;
+              const user = await db.users.findByEmail(email);
+              if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+              }
+              const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+              return res.status(200).json({ token });
+            });
+
+            function authMiddleware(req, res, next) {
+              const header = req.headers.authorization;
+              if (!header) return res.status(401).json({ error: 'Missing token' });
+              const token = header.replace('Bearer ', '');
+              try {
+                req.user = jwt.verify(token, process.env.JWT_SECRET);
+                next();
+              } catch (e) {
+                return res.status(401).json({ error: 'Invalid token' });
+              }
+            }
+
+            module.exports = { router, authMiddleware };
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response includes or references decision log entries for
+          specd_decisions.jsonl. Entries should be JSON objects with
+          date_time, spec, source ("audit"), decision_by, summary,
+          reasoning, and files fields. Each audit judgment (confirming
+          a finding, rejecting a finding, marking a spec as Implemented)
+          should produce a decision entry.
+
+  - description: "audit: records spec changes in specd_history.md"
+    vars:
+      template: claude/commands/specd/audit.md
+      user_message: >-
+        Assume you audited the auth spec and found no issues.
+        Show the full output you would produce, including status transitions,
+        decision log entries, and completion signals.
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response describes transitioning the auth spec from Ready
+          to Implemented (updating both the spec file and specs/README.md).
+          It should mention recording this in specd_decisions.jsonl.
+
+  - description: "audit: outputs AUDIT_COMPLETE with findings"
+    vars:
+      template: claude/commands/specd/audit.md
+      user_message: >-
+        Audit the auth spec. The source code uses argon2 instead of bcrypt
+        as the spec requires. Show your full audit output including signals.
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const express = require('express');
+            const argon2 = require('argon2');
+            const jwt = require('jsonwebtoken');
+            const router = express.Router();
+
+            router.post('/register', async (req, res) => {
+              const { email, password } = req.body;
+              if (!email || !email.includes('@')) return res.status(400).json({ error: 'Invalid email' });
+              const password_hash = await argon2.hash(password);
+              const user = await db.users.create({ email, password_hash });
+              return res.status(201).json({ id: user.id });
+            });
+
+            router.post('/login', async (req, res) => {
+              const { email, password } = req.body;
+              const user = await db.users.findByEmail(email);
+              if (!user || !(await argon2.verify(user.password_hash, password))) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+              }
+              const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
+              return res.status(200).json({ token });
+            });
+
+            module.exports = { router };
+    assert:
+      - type: icontains
+        value: "AUDIT_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response identifies that the code uses argon2 instead of
+          bcrypt as the spec requires and flags this as a finding. It
+          takes action on the finding — either adding a work item to
+          specd_work_list.md or updating the spec. It outputs
+          AUDIT_COMPLETE: true. It should NOT output AUDIT_CLEAN since
+          there are findings.
+
+  # --- Full-audit command ---
+
+  - description: "full-audit: audits both Ready and Implemented specs"
+    vars:
+      template: claude/commands/specd/full-audit.md
+      user_message: "Run a full audit of all specs."
+      extra_specs:
+        - path: specs/logging.md
+          content: |
+            # Logging Spec
+
+            | Field | Value |
+            | ----- | ----- |
+            | Version | v0.1 |
+            | Status | Implemented |
+
+            ## Overview
+            Structured JSON logging via winston.
+        - path: specs/README.md
+          content: |
+            # Specs
+
+            | Spec | Version | Status |
+            | ---- | ------- | ------ |
+            | [auth](auth.md) | v0.1 | Ready |
+            | [logging](logging.md) | v0.1 | Implemented |
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const bcrypt = require('bcrypt');
+            const jwt = require('jsonwebtoken');
+
+            async function register(email, password) {
+              const hash = await bcrypt.hash(password, 10);
+              return db.users.create({ email, password_hash: hash });
+            }
+
+            async function login(email, password) {
+              const user = await db.users.findByEmail(email);
+              if (!user || !(await bcrypt.compare(password, user.password_hash))) throw new Error('Invalid');
+              return jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
+            }
+
+            module.exports = { register, login };
+        - path: src/logger.js
+          content: |
+            const winston = require('winston');
+            const logger = winston.createLogger({
+              format: winston.format.json(),
+              transports: [new winston.transports.Console()],
+            });
+            module.exports = logger;
+    assert:
+      - type: icontains
+        value: "AUDIT_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response audits BOTH the auth spec (Ready) and the logging
+          spec (Implemented). It does not skip the Implemented spec.
+          This is the key difference from regular audit.
+
+  - description: "full-audit: demotes Implemented spec with findings back to Ready"
+    vars:
+      template: claude/commands/specd/full-audit.md
+      user_message: "Run a full audit of all specs."
+      extra_specs:
+        - path: specs/logging.md
+          content: |
+            # Logging Spec
+
+            | Field | Value |
+            | ----- | ----- |
+            | Version | v0.1 |
+            | Status | Implemented |
+
+            ## Overview
+            Structured JSON logging via winston.
+
+            ## Specification
+            - All log output must be structured JSON
+            - Must include timestamp, level, message, and request_id fields
+            - Must log to both console and a file at logs/app.log
+        - path: specs/README.md
+          content: |
+            # Specs
+
+            | Spec | Version | Status |
+            | ---- | ------- | ------ |
+            | [auth](auth.md) | v0.1 | Ready |
+            | [logging](logging.md) | v0.1 | Implemented |
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const bcrypt = require('bcrypt');
+            const jwt = require('jsonwebtoken');
+
+            async function register(email, password) {
+              const hash = await bcrypt.hash(password, 10);
+              return db.users.create({ email, password_hash: hash });
+            }
+
+            module.exports = { register };
+        - path: src/logger.js
+          content: |
+            // Missing file transport — spec requires logging to logs/app.log
+            // Missing request_id field in log output
+            const winston = require('winston');
+            const logger = winston.createLogger({
+              format: winston.format.json(),
+              transports: [new winston.transports.Console()],
+            });
+            module.exports = logger;
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response identifies findings in the logging spec (missing
+          file transport and/or missing request_id). Since the logging
+          spec is Implemented and has findings, the response describes
+          demoting it back to Ready status and adding work items to
+          specd_work_list.md. It may also bump the version.
+
+  - description: "full-audit: logs decisions with source full-audit"
+    vars:
+      template: claude/commands/specd/full-audit.md
+      user_message: >-
+        Run a full audit. For each judgment, show the decision log entry
+        you would write to specd_decisions.jsonl.
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const bcrypt = require('bcrypt');
+            const jwt = require('jsonwebtoken');
+
+            async function register(email, password) {
+              const hash = await bcrypt.hash(password, 10);
+              return db.users.create({ email, password_hash: hash });
+            }
+
+            module.exports = { register };
+    assert:
+      - type: icontains
+        value: "full-audit"
+      - type: llm-rubric
+        value: >-
+          The response includes decision log entries for specd_decisions.jsonl
+          with "source": "full-audit". Each audit judgment produces a
+          decision entry with the required fields.
+
+  # --- Review-intake command ---
+
+  - description: "review-intake: processes findings into work items"
+    vars:
+      template: claude/commands/specd/review-intake.md
+      user_message: "Process the review findings."
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const bcrypt = require('bcrypt');
+            const jwt = require('jsonwebtoken');
+
+            async function register(email, password) {
+              const hash = await bcrypt.hash(password, 10);
+              return db.users.create({ email, password_hash: hash });
+            }
+
+            module.exports = { register };
+      review_override: |
+        # Review
+
+        ---
+
+        ## auth
+
+        **Finding:** Login endpoint returns 200 with token but spec says the JWT should include user ID claim — code uses userId instead of id
+        **Code:** src/auth.js line 15 — jwt.sign({ userId: user.id }, ...)
+        **Spec:** specs/auth.md — "JWT with user ID claim"
+        **Options:** 1) Change claim name to id, 2) Update spec to say userId
+        **Recommendation:** Keep userId since it's more descriptive, update spec
+    assert:
+      - type: icontains
+        value: "REVIEW_INTAKE_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response creates a concrete work item in specd_work_list.md
+          based on the review finding about the JWT claim naming. It
+          processes the finding and clears it from specd_review.md.
+
+  - description: "review-intake: empty review produces immediate completion"
+    vars:
+      template: claude/commands/specd/review-intake.md
+      user_message: "Process the review findings."
+    assert:
+      - type: icontains
+        value: "REVIEW_INTAKE_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response recognizes that specd_review.md is empty and
+          immediately outputs REVIEW_INTAKE_COMPLETE: true without
+          attempting to create any work items.
+
+  - description: "review-intake: logs decisions with source review-intake and human decision_by"
+    vars:
+      template: claude/commands/specd/review-intake.md
+      user_message: >-
+        Process the review findings. Show the decision log entries you
+        would write to specd_decisions.jsonl.
+      review_override: |
+        # Review
+
+        ---
+
+        ## auth
+
+        **Finding:** Register endpoint doesn't check for duplicate emails
+        **Code:** src/auth.js — no uniqueness check before insert
+        **Spec:** specs/auth.md — "Returns 400 if email already taken"
+        **Options:** 1) Add duplicate check in code, 2) Rely on DB constraint
+        **Recommendation:** Add explicit check in code for a better error message
+    assert:
+      - type: icontains
+        value: "review-intake"
+
+  # --- Setup command ---
+
+  - description: "setup: asks about build and test commands"
+    vars:
+      template: claude/commands/specd/setup.md
+      user_message: >-
+        Help me set up specd for this project. The project files are
+        shown above — based on what you see in package.json, what
+        build and test commands should we put in AGENTS.md?
+      extra_files:
+        - path: package.json
+          content: '{"name":"test-project","scripts":{"test":"vitest run","lint":"eslint ."}}'
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response proposes or asks about build and test commands
+          for the project, referencing the tools found in package.json
+          (vitest, eslint). It should be interactive, asking for
+          confirmation rather than just writing files.
+
+  - description: "setup: proposes language-specific conventions"
+    vars:
+      template: claude/commands/specd/setup.md
+      user_message: >-
+        We finished the build commands. Now let's do Step 2 — conventions.
+        Based on the codebase files above, what conventions should we add
+        to AGENTS.md?
+      extra_files:
+        - path: go.mod
+          content: |
+            module github.com/example/myproject
+
+            go 1.22
+
+            require (
+              github.com/gin-gonic/gin v1.9.1
+              github.com/stretchr/testify v1.8.4
+            )
+        - path: main.go
+          content: |
+            package main
+
+            import (
+              "log"
+              "github.com/gin-gonic/gin"
+            )
+
+            func main() {
+              r := gin.Default()
+              r.GET("/health", handleHealth)
+              log.Fatal(r.Run(":8080"))
+            }
+
+            func handleHealth(c *gin.Context) {
+              c.JSON(200, gin.H{"status": "ok"})
+            }
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response proposes Go-specific conventions based on the
+          codebase — such as Go version, naming conventions (camelCase
+          for unexported, PascalCase for exported), error handling
+          patterns, import grouping, or Gin-specific patterns. It should
+          be interactive, asking for confirmation.
+
+  - description: "setup: proposes validation steps for implement.md"
+    vars:
+      template: claude/commands/specd/setup.md
+      user_message: >-
+        Now Step 3 — let's customize the validation section in implement.md.
+        What validation steps should we add based on the project tooling?
+      extra_files:
+        - path: package.json
+          content: '{"name":"test-project","scripts":{"test":"vitest run","lint":"eslint .","typecheck":"tsc --noEmit","format":"prettier --check ."}}'
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response proposes concrete validation steps for the implement.md
+          validation section, referencing the project's specific tools:
+          vitest for tests, eslint for linting, tsc for type checking,
+          and/or prettier for formatting. It asks for confirmation before
+          writing.
+
+  - description: "setup: offers to help write the first spec"
+    vars:
+      template: claude/commands/specd/setup.md
+      user_message: >-
+        Steps 1-3 are done. Let's move to Step 4 — the first spec.
+      extra_files:
+        - path: package.json
+          content: '{"name":"my-api","scripts":{"test":"vitest run"}}'
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response offers to help write the first spec. It either
+          asks what the user wants to build first, or (if there's existing
+          code) offers to audit existing code and create specs describing
+          the current state.
+
+  # --- SPECD_LOOP commit behavior ---
+
+  - description: "implement: asks for confirmation when not in loop"
+    vars:
+      template: claude/commands/specd/implement.md
+      user_message: >-
+        Implement the next work item.
+      worklist_override: |
+        <!-- specd_work_list: execution queue for all work -->
+        ---
+
+        ## auth v0.1
+        - Create User model with email, password_hash, created_at fields
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response presents a summary of changes and either asks the
+          user for confirmation before committing, or presents changes
+          and waits for approval rather than committing automatically.
+          It should NOT describe committing as something it does
+          automatically without user input.
+
+  - description: "implement: commits automatically in loop mode"
+    vars:
+      template: claude/commands/specd/implement.md
+      user_message: >-
+        Implement the next work item.
+      worklist_override: |
+        <!-- specd_work_list: execution queue for all work -->
+        ---
+
+        ## auth v0.1
+        - Create User model with email, password_hash, created_at fields
+      env_vars:
+        SPECD_LOOP: "1"
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response commits automatically without asking for user
+          confirmation. It does NOT present changes and wait for approval
+          — it proceeds directly to committing since SPECD_LOOP is set.
+
+  - description: "audit: asks for confirmation when not in loop"
+    vars:
+      template: claude/commands/specd/audit.md
+      user_message: >-
+        Audit the specs. After you write findings, show me what you'd commit.
+    assert:
+      - type: llm-rubric
+        value: >-
+          The response presents a summary of audit findings and changes,
+          and asks the user for confirmation before committing. It does
+          NOT commit automatically.
+
+  # --- Decisions querying ---
+
+  - description: "decisions: can be queried for past reasoning"
+    vars:
+      template: claude/commands/specd/plan.md
+      user_message: >-
+        Before we start planning, check the decision log in
+        specd_decisions.jsonl. Why did we choose in-memory rate limiting
+        instead of Redis? Who made that decision?
+      decisions_override: |
+        {"date_time":"2025-01-16T10:00:00Z","spec":"rate-limiting","version":"v0.1","source":"plan","decision_by":"alice","summary":"Use in-memory rate limiting instead of Redis","reasoning":"Single-instance deployment, Redis adds operational complexity for no benefit. Can migrate to Redis later if we scale to multiple nodes.","files":{"specs":["specs/rate-limiting.md"],"source_code":[],"other":[]}}
+        {"date_time":"2025-01-15T14:30:00Z","spec":"auth","version":"v0.1","source":"audit","decision_by":"claude","summary":"Kept bcrypt over argon2","reasoning":"Spec explicitly requires bcrypt, code matches, no reason to change","files":{"specs":["specs/auth.md"],"source_code":["src/auth.js"],"other":[]}}
+    assert:
+      - type: icontains
+        value: "single"
+      - type: llm-rubric
+        value: >-
+          The response finds and references the decision about in-memory
+          rate limiting from the decision log. It explains that the choice
+          was made because of single-instance deployment and that Redis
+          adds unnecessary operational complexity. It attributes the
+          decision to alice.

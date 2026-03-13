@@ -19,6 +19,7 @@ export const SCAFFOLD = [
   "specs/example-spec.md",
   "specd_history.md",
   "specd_review.md",
+  "specd_decisions.jsonl",
 ];
 
 /** Files where the header (up to first ---) is updated but content below is preserved */

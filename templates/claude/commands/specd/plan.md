@@ -4,7 +4,7 @@
 - Study specs/README.md to understand existing specs and their statuses. Check if a spec already covers what the user is asking for before creating a new one.
 - Do NOT read specd_history.md in full — it can be very large. Grep for the spec name to find relevant entries and avoid duplicating completed work.
 - We are going to work on modifying and creating new specs.
-- We do **not** write code unless explicitly asked to do so. We only modify *.md files and specd_work_list.md.
+- We do **not** write code unless explicitly asked to do so. We only modify *.md files, specd_work_list.md, and specd_decisions.jsonl.
 - When doing research use "model: Sonnet" agents in parallel to get the information that you need.
 
 ## Workflow
@@ -49,6 +49,28 @@ Write:
 - `Return 400 with field-level error messages when CreateProject validation fails`
 
 **Read the spec thoroughly before writing items.** Walk through every requirement in the specification section. Each behavioral requirement, each endpoint, each validation rule, each error case should map to one or more work items. If the spec says "return 404 when not found", that's a work item — don't assume the agent will figure it out from a vague umbrella item.
+
+## Work Item Checkpoint
+
+**This is mandatory.** After writing or modifying a spec section, STOP before writing work items and perform this checkpoint:
+
+1. **List every distinct behavioral requirement** you just wrote in the spec. Go line by line. If a sentence says the system must do X, that's a requirement. If it says "convert A to B", that's a requirement. If it says "warn when C", that's a requirement.
+2. **Check for implied dependencies.** Does a requirement assume something exists that might not (e.g., timezone info, a tool, a database column)? Each gap is a work item or a blocker annotation.
+3. **Write one work item per requirement** — concrete, specific, with a clear done state.
+4. **Review existing work items** for this spec version. Remove items that are no longer relevant after the spec change, update items whose scope changed, and unblock items whose dependencies were resolved. Do not leave stale items in the list.
+
+This checkpoint applies both when writing a new spec and when refining an existing one. Every spec edit should trigger a re-evaluation of the work list.
+
+## Decision Logging
+
+Log every significant decision to `specd_decisions.jsonl` — scoping choices, trade-offs, things explicitly excluded, and why. Prepend each entry as a single JSON line (newest first). Use `"source": "plan"` and `"decision_by": "claude"` for your decisions, or the human's name from `git config user.name` when the human makes the call.
+
+Decisions include:
+- Choosing to create a new spec vs extending an existing one
+- Scoping something in or out
+- Picking one approach over another
+- Deferring something to a later phase
+
 
 ## Spec-vs-Code Analysis
 

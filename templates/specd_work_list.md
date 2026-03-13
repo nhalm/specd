@@ -14,7 +14,7 @@ HOW IT WORKS:
 6. Delete the spec header in this file if no more items are under it
 7. LOOP_COMPLETE when this file has no unblocked items remaining
 
-POPULATED BY: /specd:audit command, /specd:review-intake command, and humans during spec phase.
+POPULATED BY: /specd:plan command (during spec phase), /specd:audit command, /specd:review-intake command, and humans.
 -->
 
 ---

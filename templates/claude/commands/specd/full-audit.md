@@ -92,6 +92,24 @@ After processing each spec:
 - **Implemented spec with findings** → Bump version, add changelog, update status to "Ready" in both the spec file and specs/README.md, add work items to specd_work_list.md
 - **Ready spec with findings** → Status stays Ready (findings are in specd_work_list.md)
 
+## Decision Logging
+
+Log every audit judgment to `specd_decisions.jsonl` — prepend each as a single JSON line (newest first). Use `"source": "full-audit"` and `"decision_by": "claude"`.
+
+Decisions to log:
+- Confirming or rejecting a research agent's finding (and why)
+- Choosing to update a spec vs filing a work item vs sending to review
+- Marking a spec as Implemented (no findings)
+- Demoting an Implemented spec back to Ready (what findings triggered it)
+- Any spec version bump (what changed and why)
+
+## Committing
+
+After writing findings for each spec, commit all changed files together in a single commit. This includes spec files, `specs/README.md`, `specd_work_list.md`, `specd_review.md`, and `specd_decisions.jsonl`.
+
+- If the environment variable `SPECD_LOOP` is set, commit automatically.
+- Otherwise, present a summary of changes and ask the user for confirmation before committing.
+
 ## Output
 
 After completing all specs, report a summary:
