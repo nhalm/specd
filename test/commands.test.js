@@ -53,6 +53,7 @@ describe("init", () => {
     expect(existsSync(join(tmp, ".claude/commands/specd/review-intake.md"))).toBe(true);
     expect(existsSync(join(tmp, ".claude/commands/specd/setup.md"))).toBe(true);
     expect(existsSync(join(tmp, ".claude/commands/specd/plan.md"))).toBe(true);
+    expect(existsSync(join(tmp, "specd_decisions.jsonl"))).toBe(true);
   });
 
   it("replaces {PROJECT_NAME} in AGENTS.md", () => {
@@ -282,6 +283,15 @@ describe("update", () => {
     expect(existsSync(join(tmp, ".specd-checksums.json"))).toBe(false);
   });
 
+  it("dry-run mode does not modify files", () => {
+    const loopPath = join(tmp, "loop.sh");
+    writeFileSync(loopPath, "MODIFIED");
+    const result = update(tmp, TEMPLATES_DIR, { dryRun: true, overwrite: true });
+    expect(readFileSync(loopPath, "utf-8")).toBe("MODIFIED");
+    expect(result.messages.some((m) => m.includes("WOULD"))).toBe(true);
+    expect(result.messages.some((m) => m.includes("Dry run complete"))).toBe(true);
+  });
+
   it("skips migration when new file already exists", () => {
     writeFileSync(join(tmp, "tracks.md"), "OLD CONTENT");
     update(tmp, TEMPLATES_DIR);
@@ -327,6 +337,17 @@ describe("doctor", () => {
     rmSync(join(tmp, ".specd"));
     const result = doctor(tmp);
     expect(result.fail).toBeGreaterThan(0);
+  });
+
+  it("warns on version mismatch", () => {
+    runInit(tmp);
+    const specdPath = join(tmp, ".specd");
+    const data = JSON.parse(readFileSync(specdPath, "utf-8"));
+    data.version = "0.0.1";
+    writeFileSync(specdPath, JSON.stringify(data, null, 2) + "\n");
+    const result = doctor(tmp);
+    expect(result.fail).toBeGreaterThan(0);
+    expect(result.messages.some((m) => m.includes("Version mismatch"))).toBe(true);
   });
 
   it("reports correct pass/fail counts with one missing file", () => {
