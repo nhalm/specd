@@ -1,5 +1,3 @@
-# {PROJECT_NAME} Agent Guidelines
-
 ## Spec Authority
 
 **Specs are prescriptive, not descriptive.** The spec defines what code MUST do.
@@ -8,6 +6,20 @@
 - **Read the full spec on version changes.** When a spec version changes, re-read the entire spec.
 - **Don't build on broken foundations.** If existing code uses the wrong model (e.g., wrong ID scheme, wrong data flow), fix it first. Don't add new features on top of incorrect code.
 - **Spec index:** `specs/README.md` lists all specifications organized by phase. Only specs with status "Ready" should be implemented.
+
+## Audit Discipline
+
+**Zero findings is a valid outcome.** An audit that confirms correctness is successful — do not manufacture findings to justify the work.
+
+**The bar for a finding is: will this cause a bug in production?** Not "could this theoretically be a problem under unlikely conditions" — will it actually break?
+
+Before reporting a finding:
+- **Read the actual code, not just the spec.** Findings based on spec text alone are unreliable. The code is the ground truth — if the code is correct, there is no finding.
+- **Check if it's actually reachable.** Trace the code path. If it requires multiple unlikely conditions to trigger, and existing safety nets (timeouts, cost ceilings, human abort) bound the impact, it's not a finding.
+- **Check if the spec section is prescriptive.** "Notes", "Resolved questions", and "Design decisions" sections are commentary, not requirements. Don't flag unimplemented commentary.
+- **Check if behavior is handled by LLM choice.** If the spec describes behavior that the LLM naturally produces via its tool set and prompt (e.g., choosing not to orchestrate for simple tasks), the absence of a dedicated code path is not a gap.
+- **Don't flag missing safety nets when other safety nets exist.** A missing timeout is low-priority when cost ceilings and human abort are available.
+
 ## Loop System
 
 The autonomous loop is defined in `loop.sh`. Commands live in `.claude/commands/`:
@@ -27,16 +39,21 @@ The single execution queue for all work — spec implementations, audit findings
 
 Ambiguous findings from audits that need human judgment. Items sit here until the human reviews them. On next loop start, `/specd:review-intake` promotes remaining items to specd_work_list.md (human deletes items they disagree with before restarting).
 
+---
+
+# {PROJECT_NAME} Agent Guidelines
+
 ## Build & Test
 
-- Run `make check` for linting and formatting, `make test` for the test suite
+<!-- Customize: add your project's build and test commands here -->
+- Run the project's test suite to catch errors
 - Validate with the full test suite, not just unit tests. If integration tests fail, that's a real failure — do not dismiss them.
 
 ## Conventions
 
 - Follow patterns in existing code for naming, structure, and style
 - Match the language and framework conventions of the project
-- See specs/ for directory layout and project structure specs
+<!-- Customize: add language-specific conventions here -->
 
 ### Interfaces and Dependencies
 

@@ -14,14 +14,13 @@ export const FRAMEWORK_OWNED = [
 /** Files installed once, never overwritten */
 export const SCAFFOLD = [
   "CLAUDE.md",
-  "AGENTS.md",
   "specs/README.md",
   "specs/example-spec.md",
   "specd_review.md",
 ];
 
 /** Files where the header (up to first ---) is updated but content below is preserved */
-export const HEADER_UPDATABLE = ["specd_work_list.md"];
+export const HEADER_UPDATABLE = ["AGENTS.md", "specd_work_list.md"];
 
 /** Files removed in this version (cleanup from prior installs) */
 export const REMOVED = [
