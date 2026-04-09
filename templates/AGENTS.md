@@ -1,3 +1,5 @@
+PROJECT.md
+
 ## Spec Authority
 
 **Specs are prescriptive, not descriptive.** The spec defines what code MUST do.
@@ -38,25 +40,3 @@ The single execution queue for all work — spec implementations, audit findings
 ## specd_review.md (Human Decisions)
 
 Ambiguous findings from audits that need human judgment. Items sit here until the human reviews them. On next loop start, `/specd:review-intake` promotes remaining items to specd_work_list.md (human deletes items they disagree with before restarting).
-
----
-
-# {PROJECT_NAME} Agent Guidelines
-
-## Build & Test
-
-<!-- Customize: add your project's build and test commands here -->
-- Run the project's test suite to catch errors
-- Validate with the full test suite, not just unit tests. If integration tests fail, that's a real failure — do not dismiss them.
-
-## Conventions
-
-- Follow patterns in existing code for naming, structure, and style
-- Match the language and framework conventions of the project
-<!-- Customize: add language-specific conventions here -->
-
-### Interfaces and Dependencies
-
-- **Use interfaces for external dependencies.** Database access, HTTP clients, external services — anything that crosses a boundary.
-- **Mock at boundaries, not internals.** Mock the interface, not implementation details.
-- **Dependency injection over globals.** Pass dependencies explicitly rather than importing singletons.

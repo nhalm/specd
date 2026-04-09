@@ -307,12 +307,13 @@ tests:
         value: "AUDIT_COMPLETE"
       - type: llm-rubric
         value: >-
-          The response identifies that the code uses argon2 instead of
-          bcrypt as the spec requires and flags this as a finding. It
-          takes action on the finding — either adding a work item to
-          specd_work_list.md or updating the spec. It outputs
+          The response identifies real findings in the code — the auth
+          middleware is missing from the exports (module.exports only has
+          router), and/or the JWT has no expiry set. The argon2 vs bcrypt
+          difference should be REJECTED as a finding (code works correctly,
+          argon2 is a valid alternative). The response outputs
           AUDIT_COMPLETE: true. It should NOT output AUDIT_CLEAN since
-          there are findings.
+          there are real findings beyond argon2.
 
   # --- Full-audit command ---
 
@@ -487,6 +488,35 @@ tests:
           immediately outputs REVIEW_INTAKE_COMPLETE: true without
           attempting to create any work items.
 
+  - description: "review-intake: only processes findings the human left"
+    vars:
+      template: claude/commands/specd/review-intake.md
+      user_message: >-
+        Process the review findings. The human reviewed the file and
+        deleted one finding they disagreed with. Only the remaining
+        finding should become a work item.
+      review_override: |
+        # Review
+
+        ---
+
+        ## auth
+
+        **Finding:** Register endpoint doesn't validate email format beyond checking for @
+        **Code:** src/auth.js — `!email.includes('@')` allows "@@" or "@" as valid
+        **Spec:** specs/auth.md — "Validates email format"
+        **Options:** 1) Add proper regex/library validation, 2) Keep simple check
+        **Recommendation:** Use a proper email validation library
+    assert:
+      - type: icontains
+        value: "REVIEW_INTAKE_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response creates exactly one work item from the remaining
+          finding about email validation. It does NOT create work items
+          for findings that aren't in the file (the human already deleted
+          those). It clears the processed finding from specd_review.md.
+
   # --- Setup command ---
 
   - description: "setup: asks about build and test commands"
@@ -495,7 +525,7 @@ tests:
       user_message: >-
         Help me set up specd for this project. The project files are
         shown above — based on what you see in package.json, what
-        build and test commands should we put in AGENTS.md?
+        build and test commands should we put in PROJECT.md?
       extra_files:
         - path: package.json
           content: '{"name":"test-project","scripts":{"test":"vitest run","lint":"eslint ."}}'
@@ -513,7 +543,7 @@ tests:
       user_message: >-
         We finished the build commands. Now let's do Step 2 — conventions.
         Based on the codebase files above, what conventions should we add
-        to AGENTS.md?
+        to PROJECT.md?
       extra_files:
         - path: go.mod
           content: |
@@ -586,57 +616,57 @@ tests:
           code) offers to audit existing code and create specs describing
           the current state.
 
-  # --- SPECD_LOOP commit behavior ---
+  # --- Commit behavior ---
 
-  - description: "implement: asks for confirmation when not in loop"
-    vars:
-      template: claude/commands/specd/implement.md
-      user_message: >-
-        Implement the next work item.
-      worklist_override: |
-        <!-- specd_work_list: execution queue for all work -->
-        ---
-
-        ## auth v0.1
-        - Create User model with email, password_hash, created_at fields
-    assert:
-      - type: llm-rubric
-        value: >-
-          The response presents a summary of changes and either asks the
-          user for confirmation before committing, or presents changes
-          and waits for approval rather than committing automatically.
-          It should NOT describe committing as something it does
-          automatically without user input.
-
-  - description: "implement: commits automatically in loop mode"
-    vars:
-      template: claude/commands/specd/implement.md
-      user_message: >-
-        Implement the next work item.
-      worklist_override: |
-        <!-- specd_work_list: execution queue for all work -->
-        ---
-
-        ## auth v0.1
-        - Create User model with email, password_hash, created_at fields
-      env_vars:
-        SPECD_LOOP: "1"
-    assert:
-      - type: llm-rubric
-        value: >-
-          The response commits automatically without asking for user
-          confirmation. It does NOT present changes and wait for approval
-          — it proceeds directly to committing since SPECD_LOOP is set.
-
-  - description: "audit: asks for confirmation when not in loop"
+  - description: "audit: commits spec status changes and categorizes findings"
     vars:
       template: claude/commands/specd/audit.md
       user_message: >-
-        Audit the specs. After you write findings, show me what you'd commit.
+        Audit the specs. Show your full output including what you commit.
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const bcrypt = require('bcrypt');
+            const jwt = require('jsonwebtoken');
+            const router = require('express').Router();
+
+            router.post('/register', async (req, res) => {
+              const hash = await bcrypt.hash(req.body.password, 10);
+              const user = await db.users.create({ email: req.body.email, password_hash: hash });
+              res.status(201).json({ id: user.id });
+            });
+
+            router.post('/login', async (req, res) => {
+              const user = await db.users.findByEmail(req.body.email);
+              if (!user || !(await bcrypt.compare(req.body.password, user.password_hash)))
+                return res.status(401).json({ error: 'Invalid' });
+              res.json({ token: jwt.sign({ userId: user.id }, process.env.JWT_SECRET) });
+            });
+
+            module.exports = { router };
     assert:
       - type: llm-rubric
         value: >-
-          The response presents a summary of audit findings and changes,
-          and asks the user for confirmation before committing. It does
-          NOT commit automatically.
+          The response presents audit findings (e.g., missing auth
+          middleware, missing duplicate email check). It categorizes
+          findings — clear bugs go to specd_work_list.md, ambiguous
+          findings go to specd_review.md for human review. If any spec
+          status changes were made (Ready → Implemented), those spec
+          files and specs/README.md are committed. specd_work_list.md
+          and specd_review.md are NOT committed.
+
+  - description: "audit: does not fabricate findings when no code exists"
+    vars:
+      template: claude/commands/specd/audit.md
+      user_message: "Audit the specs."
+    assert:
+      - type: icontains
+        value: "AUDIT_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          No source code files are provided for the auth spec. The response
+          must NOT fabricate findings or mark the spec as Implemented.
+          It should recognize there is no code to audit and either skip
+          the spec or report that no implementation exists. It must output
+          AUDIT_COMPLETE: true.
 

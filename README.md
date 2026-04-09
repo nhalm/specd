@@ -47,10 +47,11 @@ npx specd init
 
 This prompts for your project name and description, then creates the following in your repo:
 
-- `AGENTS.md` — Agent guidelines (build commands, conventions, how specs work)
+- `AGENTS.md` — Framework instructions for agents (spec authority, audit discipline, loop system). Updated automatically by `specd update`.
+- `PROJECT.md` — Your project-specific guidelines (build commands, conventions). Yours to customize — never overwritten.
 - `specs/` — Spec directory with an annotated example
 - `.claude/commands/specd/` — Slash commands for the autonomous loop
-- `specd_work_list.md`, `specd_review.md` — Work tracking files
+- `specd_work_list.md`, `specd_review.md` — Work tracking files (gitignored)
 - `loop.sh` — The autonomous implementation loop
 
 Next, open Claude Code and run the interactive setup:
@@ -60,7 +61,7 @@ claude
 > /specd:setup
 ```
 
-Setup analyzes your codebase and walks you through customizing `AGENTS.md` with your build commands and conventions, configuring the validation steps agents run after each implementation (tests, linting, type checking), and writing your first spec.
+Setup analyzes your codebase and walks you through customizing `PROJECT.md` with your build commands and conventions, configuring the validation steps agents run after each implementation (tests, linting, type checking), and writing your first spec.
 
 ### Installing from source
 
@@ -188,7 +189,7 @@ cat .claude/commands/specd/plan.md | claude
 
 | Command                | Purpose                                                                                                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/specd:setup`         | Interactive onboarding. Customizes AGENTS.md, validation steps, and helps write your first spec. Run once after `specd init`.                                       |
+| `/specd:setup`         | Interactive onboarding. Customizes PROJECT.md, validation steps, and helps write your first spec. Run once after `specd init`.                                      |
 | `/specd:plan`          | Collaborative planning session. Describe what you want, Claude writes the spec and work items. The primary way to create and update specs.                          |
 | `/specd:implement`     | Picks one unblocked item from `specd_work_list.md`, implements it, validates, and commits. The loop runs this repeatedly.                                           |
 | `/specd:audit`         | Audits Ready specs against code. Writes confirmed issues to `specd_work_list.md`, ambiguous findings to `specd_review.md`, and promotes clean specs to Implemented. |
@@ -203,9 +204,7 @@ Specs are written by `/specd:plan`, but it helps to know what makes a good one. 
 - **Scope** — What it handles and what it explicitly doesn't
 - **Dependencies** — Other specs this builds on
 - **Specification** — Behavior, contracts, interfaces — detailed enough that an agent can implement without asking questions
-- **Changelog** — Version history so agents can catch up on changes
-
-Don't include implementation details (file names, function signatures, variable names). The agent has autonomy on the how. See `specs/example-spec.md` for the full annotated format.
+  Don't include implementation details (file names, function signatures, variable names). The agent has autonomy on the how. See `specs/example-spec.md` for the full annotated format.
 
 ## Updating
 
@@ -213,7 +212,19 @@ Don't include implementation details (file names, function signatures, variable 
 npx specd@latest update
 ```
 
-Overwrites framework-owned files (`loop.sh`, command prompts) without touching files you've customized (`AGENTS.md`, specs, tracks).
+Overwrites framework-owned files (`AGENTS.md`, `loop.sh`, command prompts) without touching files you've customized (`PROJECT.md`, specs).
+
+**File ownership:**
+
+| File                       | Owner                   | On update                              |
+| -------------------------- | ----------------------- | -------------------------------------- |
+| `AGENTS.md`                | specd framework         | Overwritten with latest                |
+| `PROJECT.md`               | You                     | Never touched                          |
+| `loop.sh`                  | specd framework         | Overwritten with latest                |
+| `.claude/commands/specd/*` | specd framework         | Overwritten with latest                |
+| `specs/*`                  | You                     | Never touched                          |
+| `specd_work_list.md`       | Shared (header updated) | Header refreshed, your items preserved |
+| `specd_review.md`          | You                     | Never touched                          |
 
 To verify your installation:
 

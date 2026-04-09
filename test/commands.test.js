@@ -54,9 +54,9 @@ describe("init", () => {
     expect(existsSync(join(tmp, ".claude/commands/specd/plan.md"))).toBe(true);
   });
 
-  it("replaces {PROJECT_NAME} in AGENTS.md", () => {
+  it("replaces {PROJECT_NAME} in PROJECT.md", () => {
     runInit(tmp);
-    const content = readFileSync(join(tmp, "AGENTS.md"), "utf-8");
+    const content = readFileSync(join(tmp, "PROJECT.md"), "utf-8");
     expect(content).toContain("TestProject");
     expect(content).not.toContain("{PROJECT_NAME}");
   });
@@ -112,8 +112,8 @@ describe("init", () => {
       projectName: "My Project (Beta)",
       description: "A $pecial & <project>",
     });
-    const agents = readFileSync(join(tmp, "AGENTS.md"), "utf-8");
-    expect(agents).toContain("My Project (Beta)");
+    const project = readFileSync(join(tmp, "PROJECT.md"), "utf-8");
+    expect(project).toContain("My Project (Beta)");
     const readme = readFileSync(join(tmp, "specs/README.md"), "utf-8");
     expect(readme).toContain("A $pecial & <project>");
   });
