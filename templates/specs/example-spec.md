@@ -12,24 +12,6 @@
 | Status | Draft |
 | Last Updated | 2026-01-01 |
 
-## Changelog
-
-### v0.1 (2026-01-01)
-- Initial spec (draft)
-
-<!--
-  CHANGELOG RULES:
-  - Add a new entry for each version bump
-  - Old entries are immutable — never edit them
-  - Summarize what changed so agents can catch up quickly
-  - Example of a later entry:
-
-  ### v0.2 (2026-01-15)
-  - Added authentication flow (Section 3)
-  - Changed database schema: users table now has `email` column
-  - Removed: password reset via SMS (moved to future phase)
--->
-
 ## Overview
 
 <!--

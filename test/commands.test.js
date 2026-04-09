@@ -44,7 +44,6 @@ describe("init", () => {
     expect(existsSync(join(tmp, "loop.sh"))).toBe(true);
     expect(existsSync(join(tmp, "specs/README.md"))).toBe(true);
     expect(existsSync(join(tmp, "specs/example-spec.md"))).toBe(true);
-    expect(existsSync(join(tmp, "specd_history.md"))).toBe(true);
     expect(existsSync(join(tmp, "specd_review.md"))).toBe(true);
     expect(existsSync(join(tmp, "specd_work_list.md"))).toBe(true);
     expect(existsSync(join(tmp, ".claude/commands/specd/implement.md"))).toBe(true);
@@ -53,7 +52,6 @@ describe("init", () => {
     expect(existsSync(join(tmp, ".claude/commands/specd/review-intake.md"))).toBe(true);
     expect(existsSync(join(tmp, ".claude/commands/specd/setup.md"))).toBe(true);
     expect(existsSync(join(tmp, ".claude/commands/specd/plan.md"))).toBe(true);
-    expect(existsSync(join(tmp, "specd_decisions.jsonl"))).toBe(true);
   });
 
   it("replaces {PROJECT_NAME} in AGENTS.md", () => {
@@ -66,13 +64,6 @@ describe("init", () => {
   it("replaces {PROJECT_NAME} in specs/README.md", () => {
     runInit(tmp);
     const content = readFileSync(join(tmp, "specs/README.md"), "utf-8");
-    expect(content).toContain("TestProject");
-    expect(content).not.toContain("{PROJECT_NAME}");
-  });
-
-  it("replaces {PROJECT_NAME} in specd_history.md", () => {
-    runInit(tmp);
-    const content = readFileSync(join(tmp, "specd_history.md"), "utf-8");
     expect(content).toContain("TestProject");
     expect(content).not.toContain("{PROJECT_NAME}");
   });
@@ -242,14 +233,6 @@ describe("update", () => {
     expect(result.deleted).toBe(0);
   });
 
-  it("migrates tracks.md to specd_history.md", () => {
-    rmSync(join(tmp, "specd_history.md"), { force: true });
-    writeFileSync(join(tmp, "tracks.md"), "# Old History\n- item one\n");
-    update(tmp, TEMPLATES_DIR);
-    expect(existsSync(join(tmp, "tracks.md"))).toBe(false);
-    expect(readFileSync(join(tmp, "specd_history.md"), "utf-8")).toContain("item one");
-  });
-
   it("migrates working_tracks.md to specd_work_list.md with header update", () => {
     rmSync(join(tmp, "specd_work_list.md"), { force: true });
     writeFileSync(
@@ -293,10 +276,11 @@ describe("update", () => {
   });
 
   it("skips migration when new file already exists", () => {
-    writeFileSync(join(tmp, "tracks.md"), "OLD CONTENT");
+    writeFileSync(join(tmp, "working_tracks.md"), "OLD CONTENT");
     update(tmp, TEMPLATES_DIR);
-    expect(existsSync(join(tmp, "tracks.md"))).toBe(false);
-    expect(readFileSync(join(tmp, "specd_history.md"), "utf-8")).not.toContain("OLD CONTENT");
+    expect(existsSync(join(tmp, "working_tracks.md"))).toBe(false);
+    // specd_work_list.md already exists from init, so migration should not overwrite it
+    expect(readFileSync(join(tmp, "specd_work_list.md"), "utf-8")).not.toContain("OLD CONTENT");
   });
 });
 

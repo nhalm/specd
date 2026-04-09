@@ -50,10 +50,6 @@ Ask the human what they want to build first. Help them write a spec following th
 
 If the project already has code, offer to audit what exists and propose specs that describe the current state (these would start as Implemented).
 
-## Note: Decision Log
-
-Your project includes `specd_decisions.jsonl` — the AI logs decisions here as it works (scoping choices, trade-offs, audit judgments). See AGENTS.md for format details.
-
 ## Step 5: Clean up
 
 - Delete `specs/example-spec.md` and remove its row from `specs/README.md` (unless the human wants to keep it as reference)

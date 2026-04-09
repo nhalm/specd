@@ -50,8 +50,7 @@ This prompts for your project name and description, then creates the following i
 - `AGENTS.md` — Agent guidelines (build commands, conventions, how specs work)
 - `specs/` — Spec directory with an annotated example
 - `.claude/commands/specd/` — Slash commands for the autonomous loop
-- `specd_work_list.md`, `specd_history.md`, `specd_review.md` — Work tracking files
-- `specd_decisions.jsonl` — Decision log (AI records reasoning as it works)
+- `specd_work_list.md`, `specd_review.md` — Work tracking files
 - `loop.sh` — The autonomous implementation loop
 
 Next, open Claude Code and run the interactive setup:
@@ -148,7 +147,6 @@ Flags:
 After the loop runs, check two files:
 
 - **`specd_review.md`** — Ambiguous findings the audit wasn't sure about. Read each one, delete any you disagree with, and leave the rest. On the next loop cycle, `/specd:review-intake` converts remaining items into work items in `specd_work_list.md`.
-- **`specd_history.md`** — Completed work. Agents move items here after implementation. This is your done log.
 
 If new work items were generated, run the loop again. When the audit comes back clean and `specd_work_list.md` is empty, your spec is implemented.
 
@@ -160,15 +158,11 @@ This is the cycle: **plan → loop → review → plan**. You steer with natural
 
 ## Work Tracking
 
-specd uses three files to track work. You'll see them referenced throughout the commands and loop output.
+specd uses two files to track work. You'll see them referenced throughout the commands and loop output.
 
-**`specd_work_list.md`** is the todo list. Every remaining work item lives here — spec implementations, audit findings, and promoted review items. Agents read this at the start of each iteration to pick the next task. When an item is done, the agent moves it to `specd_history.md`. This file is intentionally kept small so agents can read it in full.
-
-**`specd_history.md`** is the done log. Completed work items are archived here in reverse chronological order (newest first). It grows over time and can get large — agents never read it in full, only grep for specific sections. Its purpose is preventing duplicate work and showing progress.
+**`specd_work_list.md`** is the todo list. Every remaining work item lives here — spec implementations, audit findings, and promoted review items. Agents read this at the start of each iteration to pick the next task. When an item is done, the agent removes it. This file is intentionally kept small so agents can read it in full.
 
 **`specd_review.md`** is the human decision queue. When the audit finds something ambiguous — it's not sure if the code or the spec is wrong — it writes the finding here instead of creating a work item. You review these between loop runs: delete findings you disagree with, leave the rest. On the next cycle, `/specd:review-intake` converts remaining items into work items in `specd_work_list.md`.
-
-**`specd_decisions.jsonl`** is the decision log. As agents work, they record reasoning here — scoping choices during planning, audit judgments, version bumps, and other decisions that shaped the outcome. Each line is a JSON object with timestamp, source command, and rationale. This gives you a trail of why things were done, not just what was done.
 
 ## Spec Lifecycle
 
@@ -196,7 +190,7 @@ cat .claude/commands/specd/plan.md | claude
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/specd:setup`         | Interactive onboarding. Customizes AGENTS.md, validation steps, and helps write your first spec. Run once after `specd init`.                                       |
 | `/specd:plan`          | Collaborative planning session. Describe what you want, Claude writes the spec and work items. The primary way to create and update specs.                          |
-| `/specd:implement`     | Picks one unblocked item from `specd_work_list.md`, implements it, validates, commits, and moves it to `specd_history.md`. The loop runs this repeatedly.           |
+| `/specd:implement`     | Picks one unblocked item from `specd_work_list.md`, implements it, validates, and commits. The loop runs this repeatedly.                                           |
 | `/specd:audit`         | Audits Ready specs against code. Writes confirmed issues to `specd_work_list.md`, ambiguous findings to `specd_review.md`, and promotes clean specs to Implemented. |
 | `/specd:full-audit`    | Same as audit but also checks Implemented specs for regressions. Demotes specs with issues back to Ready.                                                           |
 | `/specd:review-intake` | Converts `specd_review.md` items into work items in `specd_work_list.md`. Runs automatically at the start of each loop cycle.                                       |

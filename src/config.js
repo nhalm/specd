@@ -17,9 +17,7 @@ export const SCAFFOLD = [
   "AGENTS.md",
   "specs/README.md",
   "specs/example-spec.md",
-  "specd_history.md",
   "specd_review.md",
-  "specd_decisions.jsonl",
 ];
 
 /** Files where the header (up to first ---) is updated but content below is preserved */
@@ -39,11 +37,12 @@ export const REMOVED = [
   "review.md",
   ".specd-version",
   ".specd-checksums.json",
+  "specd_history.md",
+  "specd_decisions.jsonl",
 ];
 
 /** Old → new file renames. Applied during update before other steps. */
 export const MIGRATIONS = [
-  ["tracks.md", "specd_history.md"],
   ["working_tracks.md", "specd_work_list.md"],
   ["review.md", "specd_review.md"],
 ];

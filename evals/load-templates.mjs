@@ -81,7 +81,6 @@ function buildContext(vars) {
     vars.extra_specs?.find((s) => s.path === "specs/README.md")?.content ||
     DEFAULT_SPECS_README;
   const worklist = vars.worklist_override || readTemplate("specd_work_list.md");
-  const history = readTemplate("specd_history.md");
   const review = vars.review_override || readTemplate("specd_review.md");
   const exampleSpec = readTemplate("specs/example-spec.md");
 
@@ -105,16 +104,8 @@ ${exampleSpec}
 ${worklist}
 </file>
 
-<file path="specd_history.md">
-${history}
-</file>
-
 <file path="specd_review.md">
 ${review}
-</file>
-
-<file path="specd_decisions.jsonl">
-${vars.decisions_override || ""}
 </file>`;
 
   // Add extra specs (other than README which is already included)

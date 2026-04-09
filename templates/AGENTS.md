@@ -5,11 +5,9 @@
 **Specs are prescriptive, not descriptive.** The spec defines what code MUST do.
 
 - **Spec is source of truth.** If code contradicts the spec, the code is wrong — refactor it.
-- **Read the full spec on version changes.** When the spec version is newer than specd_history.md, re-read the entire spec — not just the changelog. The changelog summarizes what changed, but context lives in the full spec.
+- **Read the full spec on version changes.** When a spec version changes, re-read the entire spec.
 - **Don't build on broken foundations.** If existing code uses the wrong model (e.g., wrong ID scheme, wrong data flow), fix it first. Don't add new features on top of incorrect code.
 - **Spec index:** `specs/README.md` lists all specifications organized by phase. Only specs with status "Ready" should be implemented.
-- **Changelogs are immutable.** When creating new changelog entries, old entries never change.
-
 ## Loop System
 
 The autonomous loop is defined in `loop.sh`. Commands live in `.claude/commands/`:
@@ -23,42 +21,11 @@ The autonomous loop is defined in `loop.sh`. Commands live in `.claude/commands/
 
 ## specd_work_list.md (Remaining Work)
 
-The single execution queue for all work — spec implementations, audit findings, and promoted review items. **Read it in full** at the start of each iteration — it is kept small. Pick an unblocked item, implement it, then move it to specd_history.md.
-
-## specd_history.md (Done Log)
-
-specd_history.md is the archive of completed work in reverse chronological order (newest first). It does NOT contain remaining items — those live in specd_work_list.md.
-
-Each entry is a single line: `- **spec-name v0.1 (YYYY-MM-DD):** description`. New entries go at the top of the file, below the header comment.
-
-**Never read specd_history.md in full — it can get large.** Use `Grep` to search for specific specs or dates when checking for duplicates.
+The single execution queue for all work — spec implementations, audit findings, and promoted review items. **Read it in full** at the start of each iteration — it is kept small. Pick an unblocked item, implement it, then remove it from the list.
 
 ## specd_review.md (Human Decisions)
 
 Ambiguous findings from audits that need human judgment. Items sit here until the human reviews them. On next loop start, `/specd:review-intake` promotes remaining items to specd_work_list.md (human deletes items they disagree with before restarting).
-
-## specd_decisions.jsonl (Decision Log)
-
-Machine-readable log of decisions made during planning, audits, implementation, and review. One JSON object per line, newest first. **Never read in full** — use `Grep` or `jq` to query.
-
-Every significant decision must be logged: scoping choices, spec changes, audit judgments, review outcomes. Each entry records who decided (AI or human via git config), which command produced it, and which files are involved.
-
-Entry format:
-```json
-{"date_time":"2025-01-15T14:30:00Z","spec":"auth","version":"v0.1","source":"audit","decision_by":"claude","summary":"Kept argon2 over spec's bcrypt","reasoning":"argon2 is current best practice","files":{"specs":["specs/auth.md"],"source_code":["src/auth.js"],"other":["specd_work_list.md"]}}
-```
-
-Fields:
-- `date_time` — ISO 8601 UTC
-- `spec` — spec name (without path or extension)
-- `version` — spec version at time of decision, or `null` if not version-specific
-- `source` — command that produced it: `plan`, `audit`, `full-audit`, `review-intake`, `implement`
-- `decision_by` — `"claude"` for AI decisions, or the human's name from `git config user.name`
-- `summary` — one-line description of the decision
-- `reasoning` — why this decision was made
-- `files.specs` — spec files affected
-- `files.source_code` — source code files affected
-- `files.other` — other files affected (work list, history, etc.)
 
 ## Build & Test
 

@@ -87,6 +87,18 @@ export function init(targetDir, templatesDir, { projectName, description }) {
     chmodSync(loopPath, 0o755);
   }
 
+  // Ensure local-only files are gitignored
+  const gitignorePath = join(targetDir, ".gitignore");
+  const gitignoreEntries = ["specd_work_list.md", "specd_review.md"];
+  const existing = existsSync(gitignorePath) ? readFileSync(gitignorePath, "utf-8") : "";
+  const missing = gitignoreEntries.filter((entry) => !existing.split("\n").includes(entry));
+  if (missing.length > 0) {
+    const suffix = existing.endsWith("\n") || existing === "" ? "" : "\n";
+    const block = `${suffix}\n# specd local tracking (not committed)\n${missing.join("\n")}\n`;
+    writeFileSync(gitignorePath, existing + block);
+    messages.push("  UPDATE  .gitignore (added specd tracking files)");
+  }
+
   // Save .specd with version and checksums
   const checksums = {};
   for (const dest of ALL_FILES) {
