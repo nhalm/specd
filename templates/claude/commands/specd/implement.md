@@ -3,6 +3,10 @@ Read specd_work_list.md in full — it contains all remaining work items.
 
 Your task is to implement ONE work item from specd_work_list.md, then validate it works.
 
+## Step 0: Check for work
+
+After reading specd_work_list.md, check if there are any unblocked items (lines that do NOT contain the string `(blocked:`). If the file is empty or every item contains `(blocked:`, there is nothing to do — output `LOOP_COMPLETE: true` and stop.
+
 ## Step 1: Pick a work item
 
 - Pick an unblocked item from specd_work_list.md — an item is unblocked if and only if its line does NOT contain the string `(blocked:`. Items without that string are ready to implement regardless of what version or section they're in.
