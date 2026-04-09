@@ -94,9 +94,6 @@ After processing each spec:
 
 After writing findings for each spec, commit all changed spec files and `specs/README.md` together in a single commit. Do not commit `specd_work_list.md` or `specd_review.md`.
 
-- If the environment variable `SPECD_LOOP` is set, commit automatically.
-- Otherwise, present a summary of changes and ask the user for confirmation before committing.
-
 ## Output
 
 After completing all specs, report a summary:

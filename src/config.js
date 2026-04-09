@@ -2,6 +2,7 @@ export const VERSION = "0.1.0";
 
 /** Files that get overwritten on update */
 export const FRAMEWORK_OWNED = [
+  "AGENTS.md",
   "loop.sh",
   ".claude/commands/specd/implement.md",
   ".claude/commands/specd/audit.md",
@@ -14,13 +15,14 @@ export const FRAMEWORK_OWNED = [
 /** Files installed once, never overwritten */
 export const SCAFFOLD = [
   "CLAUDE.md",
+  "PROJECT.md",
   "specs/README.md",
   "specs/example-spec.md",
   "specd_review.md",
 ];
 
 /** Files where the header (up to first ---) is updated but content below is preserved */
-export const HEADER_UPDATABLE = ["AGENTS.md", "specd_work_list.md"];
+export const HEADER_UPDATABLE = ["specd_work_list.md"];
 
 /** Files removed in this version (cleanup from prior installs) */
 export const REMOVED = [

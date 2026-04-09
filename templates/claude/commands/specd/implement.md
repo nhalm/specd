@@ -20,9 +20,9 @@ After reading specd_work_list.md, check if there are any unblocked items (lines 
 
 ## Step 3: Implement
 
+- **Implement ONLY the picked work item — nothing else.** The spec provides context, not a todo list. If the spec describes 5 endpoints but the work item says "Create User model", you create the model and stop. Other work items exist for the other pieces.
 - If code contradicts the spec, fix the code first (see AGENTS.md)
 - Do NOT use TodoWrite — just do the work
-- Do NOT do multiple things — ONE thing per iteration
 
 ## Step 4: Validate
 
@@ -33,9 +33,6 @@ After reading specd_work_list.md, check if there are any unblocked items (lines 
 ## Step 5: Record
 
 Update tracking files, then commit:
-
-- If the environment variable `SPECD_LOOP` is set, commit automatically.
-- Otherwise, present a summary of changes and ask the user for confirmation before committing.
 
 1. Remove the completed item from specd_work_list.md.
 2. Check specd_work_list.md for items with `(blocked: ...)` annotations that reference the work you just completed. If the blocker is resolved, remove the `(blocked: ...)` annotation.
