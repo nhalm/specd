@@ -438,7 +438,7 @@ tests:
 
   # --- Review-intake command ---
 
-  - description: "review-intake: processes findings into work items"
+  - description: "review-intake: processes finding with letter decision"
     vars:
       template: claude/commands/specd/review-intake.md
       user_message: "Process the review findings."
@@ -455,25 +455,229 @@ tests:
 
             module.exports = { register };
       review_override: |
-        # Review
-
-        ---
-
         ## auth
 
         **Finding:** Login endpoint returns 200 with token but spec says the JWT should include user ID claim — code uses userId instead of id
         **Code:** src/auth.js line 15 — jwt.sign({ userId: user.id }, ...)
         **Spec:** specs/auth.md — "JWT with user ID claim"
-        **Options:** 1) Change claim name to id, 2) Update spec to say userId
-        **Recommendation:** Keep userId since it's more descriptive, update spec
+        **Options:**
+        - A: Change claim name to id
+        - B: Update spec to say userId
+        **Recommendation:** Option B — userId is more descriptive
+        **Decision:** B
     assert:
       - type: icontains
         value: "REVIEW_INTAKE_COMPLETE"
       - type: llm-rubric
         value: >-
-          The response creates a concrete work item in specd_work_list.md
-          based on the review finding about the JWT claim naming. It
-          processes the finding and clears it from specd_review.md.
+          The response interprets the decision "B" as meaning "update the
+          spec to say userId". It creates a work item or spec update
+          accordingly. The finding is cleared from specd_review.md.
+
+  - description: "review-intake: processes finding with freeform decision"
+    vars:
+      template: claude/commands/specd/review-intake.md
+      user_message: "Process the review findings."
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const bcrypt = require('bcrypt');
+            const jwt = require('jsonwebtoken');
+
+            async function register(email, password) {
+              const hash = await bcrypt.hash(password, 10);
+              return db.users.create({ email, password_hash: hash });
+            }
+
+            module.exports = { register };
+      review_override: |
+        ## auth
+
+        **Finding:** Register endpoint doesn't validate email format beyond checking for @
+        **Code:** src/auth.js — `!email.includes('@')` allows "@@" or "@" as valid
+        **Spec:** specs/auth.md — "Validates email format"
+        **Options:**
+        - A: Add proper regex/library validation
+        - B: Keep simple check
+        **Recommendation:** Option A
+        **Decision:** A, but use a lightweight regex, not a library. Keep it simple.
+    assert:
+      - type: icontains
+        value: "REVIEW_INTAKE_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response creates a work item that incorporates the human's
+          specific guidance — use a lightweight regex, not a library.
+          The work item should not just say "add validation" generically;
+          it should preserve the human's clarification.
+
+  - description: "review-intake: skips finding with skip decision"
+    vars:
+      template: claude/commands/specd/review-intake.md
+      user_message: "Process the review findings."
+      review_override: |
+        ## auth
+
+        **Finding:** Auth middleware returns 401 for both missing and invalid tokens
+        **Code:** src/auth.js — same 401 for both cases
+        **Spec:** specs/auth.md — doesn't distinguish error messages
+        **Options:**
+        - A: Use different status codes or error messages
+        - B: Leave as-is
+        **Recommendation:** Option A for better debugging
+        **Decision:** skip, this is fine as-is
+    assert:
+      - type: icontains
+        value: "REVIEW_INTAKE_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response recognizes the decision as "skip" and does NOT
+          create a work item for this finding. The finding is cleared
+          from specd_review.md with no corresponding entry in
+          specd_work_list.md.
+
+  - description: "review-intake: leaves undecided findings in place"
+    vars:
+      template: claude/commands/specd/review-intake.md
+      user_message: "Process the review findings."
+      review_override: |
+        ## auth
+
+        **Finding:** Login endpoint returns 200 with token but spec says the JWT should include user ID claim — code uses userId instead of id
+        **Code:** src/auth.js line 15 — jwt.sign({ userId: user.id }, ...)
+        **Spec:** specs/auth.md — "JWT with user ID claim"
+        **Options:**
+        - A: Change claim name to id
+        - B: Update spec to say userId
+        **Recommendation:** Option B
+        **Decision:**
+    assert:
+      - type: icontains
+        value: "REVIEW_INTAKE_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response recognizes that the Decision field is blank and
+          leaves this finding in specd_review.md without processing it.
+          It does NOT create a work item for this undecided finding.
+          It does NOT make a decision on behalf of the human.
+
+  - description: "review-intake: mixed decided and undecided findings"
+    vars:
+      template: claude/commands/specd/review-intake.md
+      user_message: "Process the review findings."
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const bcrypt = require('bcrypt');
+            const jwt = require('jsonwebtoken');
+
+            async function register(email, password) {
+              const hash = await bcrypt.hash(password, 10);
+              return db.users.create({ email, password_hash: hash });
+            }
+
+            module.exports = { register };
+      review_override: |
+        ## auth
+
+        **Finding:** Register endpoint doesn't validate email format
+        **Code:** src/auth.js — no email validation
+        **Spec:** specs/auth.md — "Validates email format"
+        **Options:**
+        - A: Add regex validation
+        - B: Keep as-is
+        **Recommendation:** Option A
+        **Decision:** A
+
+        **Finding:** Auth middleware missing from exports
+        **Code:** src/auth.js — module.exports only has register
+        **Spec:** specs/auth.md — "Auth middleware to protect routes"
+        **Options:**
+        - A: Add middleware and export it
+        - B: Separate middleware into its own file
+        **Recommendation:** Option A
+        **Decision:**
+    assert:
+      - type: icontains
+        value: "REVIEW_INTAKE_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response processes ONLY the first finding (email validation,
+          which has decision "A") into a work item. The second finding
+          (auth middleware, blank decision) is left in specd_review.md
+          untouched. Exactly one work item is created, and only the
+          decided finding is cleared.
+
+  - description: "review-intake: decision on next line instead of inline"
+    vars:
+      template: claude/commands/specd/review-intake.md
+      user_message: "Process the review findings."
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const bcrypt = require('bcrypt');
+            const jwt = require('jsonwebtoken');
+
+            async function register(email, password) {
+              const hash = await bcrypt.hash(password, 10);
+              return db.users.create({ email, password_hash: hash });
+            }
+
+            module.exports = { register };
+      review_override: |
+        ## auth
+
+        **Finding:** Register endpoint doesn't validate email format
+        **Code:** src/auth.js — no email validation
+        **Spec:** specs/auth.md — "Validates email format"
+        **Options:**
+        - A: Add regex validation
+        - B: Keep as-is
+        **Recommendation:** Option A
+        **Decision:**
+        A, but use a simple regex not a full library
+    assert:
+      - type: icontains
+        value: "REVIEW_INTAKE_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response recognizes that the human wrote their decision on
+          the line BELOW the **Decision:** field. It treats this as a
+          valid decision (option A with clarification about using a simple
+          regex). It creates a work item that preserves the guidance and
+          clears the finding from specd_review.md. It does NOT treat this
+          as an undecided item.
+
+  - description: "review-intake: decision with no label, just text after recommendation"
+    vars:
+      template: claude/commands/specd/review-intake.md
+      user_message: "Process the review findings."
+      extra_files:
+        - path: src/auth.js
+          content: |
+            const bcrypt = require('bcrypt');
+            module.exports = { register: async (email, pw) => {} };
+      review_override: |
+        ## auth
+
+        **Finding:** Register endpoint doesn't validate email format
+        **Code:** src/auth.js — no email validation
+        **Spec:** specs/auth.md — "Validates email format"
+        **Options:**
+        - A: Add regex validation
+        - B: Keep as-is
+        **Recommendation:** Option A
+
+        just do A
+    assert:
+      - type: icontains
+        value: "REVIEW_INTAKE_COMPLETE"
+      - type: llm-rubric
+        value: >-
+          The response recognizes "just do A" as the human's decision
+          even though there is no **Decision:** label. It interprets
+          this as choosing option A and creates a corresponding work item.
+          It does NOT treat this as an undecided item.
 
   - description: "review-intake: empty review produces immediate completion"
     vars:
@@ -487,35 +691,6 @@ tests:
           The response recognizes that specd_review.md is empty and
           immediately outputs REVIEW_INTAKE_COMPLETE: true without
           attempting to create any work items.
-
-  - description: "review-intake: only processes findings the human left"
-    vars:
-      template: claude/commands/specd/review-intake.md
-      user_message: >-
-        Process the review findings. The human reviewed the file and
-        deleted one finding they disagreed with. Only the remaining
-        finding should become a work item.
-      review_override: |
-        # Review
-
-        ---
-
-        ## auth
-
-        **Finding:** Register endpoint doesn't validate email format beyond checking for @
-        **Code:** src/auth.js — `!email.includes('@')` allows "@@" or "@" as valid
-        **Spec:** specs/auth.md — "Validates email format"
-        **Options:** 1) Add proper regex/library validation, 2) Keep simple check
-        **Recommendation:** Use a proper email validation library
-    assert:
-      - type: icontains
-        value: "REVIEW_INTAKE_COMPLETE"
-      - type: llm-rubric
-        value: >-
-          The response creates exactly one work item from the remaining
-          finding about email validation. It does NOT create work items
-          for findings that aren't in the file (the human already deleted
-          those). It clears the processed finding from specd_review.md.
 
   # --- Setup command ---
 
